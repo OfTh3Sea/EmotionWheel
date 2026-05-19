@@ -1,12 +1,34 @@
-Emotion Wheel for Adults
+🌀 Emotion Wheel 🎭
 
-An interactive emotional wellness tool designed for the general public.
-This tool helps users identify, understand, and regulate their emotions through:
+An interactive emotional wellness tool for adults — built with HTML, CSS & JavaScript.
 
-🌀 Emotion Wheel — explore and name what you're feeling
+🧠 About
 
-🔍 Browse & Quiz — find your feeling even when words are hard
+The Emotion Wheel helps you identify, understand, and regulate your emotions. Whether you know exactly how you're feeling or can't quite find the words, this tool guides you toward emotional clarity — no sign-up, no accounts, just open and use.
 
-📓 Mood Journal — log and track your emotions over time
+🌊 What's Inside
 
-Built for emotional education, self-awareness, and regulation. No sign-up required — just open and use.
+🌀 Emotion Wheel
+
+Click any section to explore and name your feeling
+
+🔍 Browse All
+
+Scroll through every emotion in the library
+
+❓ Find My Feeling
+
+Answer a few questions to identify your emotion
+
+📓 Mood Journal
+
+Log and track your emotions over time
+
+💡 Why It Exists
+Emotional education is for everyone. This tool was built to help the general public develop self-awareness, expand their emotional vocabulary, and practice healthy regulation — for free, forever.
+
+🛠️ Built With
+
+HTML5
+CSS3
+JavaScript
