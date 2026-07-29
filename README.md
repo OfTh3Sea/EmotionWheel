@@ -58,8 +58,8 @@ Designed for use by **individuals, therapists, counselors, coaches, and mental h
 - Includes secondary and tertiary emotions at varying intensities
 - Language calibrated for adult emotional complexity
 
-
 ---
+
 
 ## 🚀 Getting Started
 
