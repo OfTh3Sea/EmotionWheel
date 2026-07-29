@@ -1,6 +1,6 @@
 🌀 Emotion Wheel 🎭
 
-An interactive emotional wellness tool for adults — built with HTML, CSS & JavaScript.
+An interactive emotional wellness tool for all ages — built with HTML, CSS & JavaScript.
 
 🧠 About
 
