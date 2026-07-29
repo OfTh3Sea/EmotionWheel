@@ -118,6 +118,7 @@ README.md             ← This file
 | **Feelings Friends** | 1–5 | Illustrated faces, color picker, sticker canvas, caregiver dashboard |
 | **Feelings Explorer** | 5–10 | Flip cards with definitions, intensity sliders, drawing canvas |
 | **Teen Check-in** | 11–17 | Body map, triggers, journal, counselor view, student privacy controls |
+| **Burnout Barometer**  | 10+ | Age-specific burnout assessment, live thermometer, recovery activities |
 
 ---
 
