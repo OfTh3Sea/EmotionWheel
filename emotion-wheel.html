@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Emotion Wheel</title>
+<title>Mindscape · Therapy Tools</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -13,22 +13,28 @@
     --muted: #6b5e4e;
     --border: #e8ddd0;
 
-    --joy: #f5c842;
-    --joy-light: #fde98a;
-    --trust: #6bc17a;
-    --trust-light: #a8ddb3;
-    --fear: #8ab4d4;
-    --fear-light: #b8d4e8;
-    --surprise: #c084d4;
-    --surprise-light: #d8aee6;
-    --sadness: #7b9fd4;
-    --sadness-light: #a8c0e4;
-    --disgust: #7abc7a;
-    --disgust-light: #a8d4a8;
-    --anger: #e87070;
-    --anger-light: #f0a8a8;
-    --anticipation: #f0a040;
-    --anticipation-light: #f4c480;
+    /* Dynamic theme — overridden by JS when emotion selected */
+    --accent: #c17b4a;
+    --accent-light: #f0e4d4;
+    --theme-color: #c17b4a;
+    --theme-light: #f0e4d4;
+    --theme-ultralight: #faf3ec;
+
+    --joy: #f5c842; --joy-light: #fdf0b0;
+    --trust: #6bc17a; --trust-light: #c5e8ca;
+    --fear: #7aaed4; --fear-light: #c0d9ee;
+    --surprise: #b07ed4; --surprise-light: #d9c0ee;
+    --sadness: #7b9fd4; --sadness-light: #bdd0ee;
+    --disgust: #7abc7a; --disgust-light: #bce0bc;
+    --anger: #e87070; --anger-light: #f4bcbc;
+    --anticipation: #f0a040; --anticipation-light: #f8d4a0;
+  }
+
+  /* Smooth color transitions globally */
+  body, .sidebar, .wheel-page-header, .checkin-card::before,
+  .nav-item.active, .new-entry-btn, .save-btn,
+  .inner-tab-bar, .log-btn, .quiz-btn.highlight {
+    transition: background-color 0.45s ease, border-color 0.45s ease, color 0.45s ease;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -41,7 +47,6 @@
     overflow-x: hidden;
   }
 
-  /* Texture overlay */
   body::before {
     content: '';
     position: fixed;
@@ -52,22 +57,100 @@
     opacity: 0.4;
   }
 
-  header {
-    text-align: center;
-    padding: 2.5rem 1rem 1rem;
+  /* ── APP SHELL ── */
+  .app-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
     position: relative;
     z-index: 1;
   }
 
-  header h1 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2rem, 5vw, 3.2rem);
-    font-weight: 300;
-    letter-spacing: 0.08em;
-    color: var(--ink);
+  /* ── TOP NAV (always visible) ── */
+  .topnav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1.5rem;
+    height: 56px;
+    background: var(--warm-white);
+    border-bottom: 3px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    transition: border-color 0.35s ease, background 0.35s ease;
   }
 
-  header p {
+  .topnav-brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .topnav-brand span {
+    font-size: 0.65rem;
+    color: var(--muted);
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    margin-top: 1px;
+  }
+
+  .topnav-links {
+    display: flex;
+    gap: 0.3rem;
+  }
+
+  .topnav-btn {
+    padding: 0.45rem 1.1rem;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--muted);
+    background: transparent;
+    transition: all 0.25s ease;
+    letter-spacing: 0.02em;
+  }
+
+  .topnav-btn:hover { color: var(--ink); background: var(--theme-light); }
+
+  .topnav-btn.active {
+    background: var(--theme-light);
+    color: var(--ink);
+    border-color: var(--theme-color);
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main { flex: 1; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── SIDEBAR (hidden — replaced by topnav) ── */
+  .sidebar { display: none; }
+  .mobile-nav { display: none; }
+
+  /* ── EMOTION WHEEL PAGE ── */
+  .wheel-page-header {
+    text-align: center;
+    padding: 2.5rem 1rem 0.5rem;
+  }
+
+  .wheel-page-header h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 300;
+    letter-spacing: 0.08em;
+  }
+
+  .wheel-page-header p {
     font-size: 0.85rem;
     color: var(--muted);
     margin-top: 0.4rem;
@@ -75,27 +158,24 @@
     letter-spacing: 0.04em;
   }
 
-  .tab-bar {
+  .inner-tab-bar {
     display: flex;
     justify-content: center;
     gap: 0.5rem;
-    margin: 1.5rem auto 0;
-    max-width: 500px;
+    margin: 1.2rem auto 0;
     padding: 0.25rem;
     background: var(--border);
     border-radius: 999px;
     width: fit-content;
-    position: relative;
-    z-index: 1;
   }
 
-  .tab {
-    padding: 0.55rem 1.4rem;
+  .inner-tab {
+    padding: 0.5rem 1.2rem;
     border: none;
     background: transparent;
     border-radius: 999px;
     font-family: 'DM Sans', sans-serif;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 500;
     color: var(--muted);
     cursor: pointer;
@@ -103,87 +183,53 @@
     letter-spacing: 0.03em;
   }
 
-  .tab.active {
-    background: var(--warm-white);
-    color: var(--ink);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  }
+  .inner-tab.active { background: var(--warm-white); color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
 
-  .view { display: none; position: relative; z-index: 1; }
-  .view.active { display: block; }
+  .inner-view { display: none; }
+  .inner-view.active { display: block; }
 
-  /* ── WHEEL VIEW ── */
+  /* Wheel layout — always vertical stack */
   .wheel-layout {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2rem;
-    padding: 2rem 1rem;
-  }
-
-  @media(min-width: 900px) {
-    .wheel-layout {
-      flex-direction: row;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 2rem 3rem;
-    }
+    gap: 1.5rem;
+    padding: 1.5rem 1rem 2rem;
+    max-width: 700px;
+    margin: 0 auto;
   }
 
   #wheel-svg-wrap {
     flex-shrink: 0;
-    width: min(520px, 94vw);
-    position: relative;
+    width: min(420px, 92vw);
   }
 
-  #wheel-svg-wrap svg {
-    width: 100%;
-    height: auto;
-    cursor: pointer;
-  }
+  #wheel-svg-wrap svg { width: 100%; height: auto; cursor: pointer; }
 
-  .wheel-sector {
-    transition: opacity 0.2s;
-    cursor: pointer;
-  }
+  .wheel-sector { transition: opacity 0.2s; cursor: pointer; }
   .wheel-sector:hover { opacity: 0.85; }
   .wheel-sector.dimmed { opacity: 0.35; }
   .wheel-sector.selected { opacity: 1; filter: brightness(1.08); }
 
-  .wheel-label {
-    pointer-events: none;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10px;
-    font-weight: 500;
-    fill: rgba(26,18,8,0.85);
-    text-anchor: middle;
-    dominant-baseline: middle;
-  }
+  .wheel-label { pointer-events: none; font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; fill: rgba(26,18,8,0.85); text-anchor: middle; dominant-baseline: middle; }
   .wheel-label.outer { font-size: 7.5px; fill: rgba(26,18,8,0.7); }
   .wheel-label.core { font-size: 12px; font-weight: 600; fill: rgba(26,18,8,0.9); }
 
-  /* Info panel */
+  /* Emotion info panel */
   .emotion-info {
-    flex: 1;
-    max-width: 380px;
-    min-height: 300px;
+    width: 100%;
+    max-width: 520px;
+    min-height: 200px;
     background: var(--warm-white);
-    border: 1px solid var(--border);
+    border: 3px solid var(--border);
     border-radius: 20px;
     padding: 2rem;
     position: relative;
     overflow: hidden;
-    transition: all 0.3s;
+    transition: border-color 0.35s ease, background 0.35s ease;
   }
 
-  .emotion-info::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 5px;
-    background: var(--panel-color, #ccc);
-    border-radius: 20px 20px 0 0;
-  }
+  .emotion-info::before { display: none; }
 
   .emotion-info .placeholder {
     display: flex;
@@ -195,441 +241,496 @@
     color: var(--muted);
   }
 
-  .emotion-info .placeholder .arrow-hint {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-    opacity: 0.4;
-  }
-
-  .emotion-info .placeholder p {
-    font-size: 0.85rem;
-    font-style: italic;
-    font-family: 'Cormorant Garamond', serif;
-    line-height: 1.6;
-  }
+  .emotion-info .placeholder .arrow-hint { font-size: 2.5rem; margin-bottom: 0.5rem; opacity: 0.4; }
+  .emotion-info .placeholder p { font-size: 0.85rem; font-style: italic; font-family: 'Cormorant Garamond', serif; line-height: 1.6; }
 
   .info-content { display: none; }
   .info-content.visible { display: block; animation: fadeUp 0.3s ease; }
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-  .info-header {
+  .info-header { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 1.2rem; }
+
+  .info-name { font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; font-weight: 400; line-height: 1; transition: color 0.35s ease; }
+
+  .info-parent { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.04em; padding: 0.2rem 0.6rem; border-radius: 999px; background: var(--panel-color-light, #eee); }
+
+  .info-section-label { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 1.2rem 0 0.4rem; }
+
+  .info-desc { font-size: 0.88rem; line-height: 1.7; color: #3a3028; }
+
+  .examples-list { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
+  .examples-list li { font-size: 0.82rem; padding: 0.4rem 0.8rem; background: #f5f5f0; border-radius: 8px; color: #3a3028; line-height: 1.5; border-left: 3px solid #e8ddd0; transition: background 0.35s ease, border-color 0.35s ease; }
+  .examples-list li::before { content: '→ '; opacity: 0.5; }
+
+  .related-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+  .related-tag { font-size: 0.75rem; padding: 0.25rem 0.6rem; border: 2px solid var(--border); border-radius: 999px; color: var(--muted); cursor: pointer; transition: all 0.3s ease; font-weight: 500; }
+  .related-tag:hover { background: rgba(0,0,0,0.05); }
+
+  /* Log to journal button */
+  .log-btn-wrap { margin-top: 1.4rem; }
+  .log-btn {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    background: var(--panel-color, #ccc);
+    color: rgba(26,18,8,0.85);
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
     display: flex;
-    align-items: baseline;
-    gap: 0.75rem;
-    margin-bottom: 1.2rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .log-btn:hover { filter: brightness(0.95); transform: translateY(-1px); }
+
+  /* Browse view */
+  .browse-view { padding: 2rem 1.5rem; max-width: 940px; margin: 0 auto; }
+  .core-section { margin-bottom: 2.5rem; }
+  .core-title { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 400; display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+  .core-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .emotion-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 0.6rem; }
+  .emotion-card { padding: 0.8rem 1rem; border-radius: 12px; border: 1px solid transparent; cursor: pointer; transition: all 0.2s; background: var(--warm-white); }
+  .emotion-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: var(--card-color); }
+  .emotion-card .card-name { font-size: 0.9rem; font-weight: 500; margin-bottom: 0.2rem; }
+  .emotion-card .card-preview { font-size: 0.75rem; color: var(--muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* Quiz view */
+  .quiz-wrap { max-width: 600px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
+  .quiz-intro { text-align: center; margin-bottom: 2rem; }
+  .quiz-intro h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; margin-bottom: 0.5rem; }
+  .quiz-intro p { font-size: 0.85rem; color: var(--muted); line-height: 1.7; max-width: 420px; margin: 0 auto; }
+  .quiz-card { background: var(--warm-white); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; margin-bottom: 1rem; }
+  .quiz-step { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.8rem; }
+  .quiz-question { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 400; line-height: 1.4; margin-bottom: 1.4rem; }
+  .quiz-options { display: grid; gap: 0.5rem; }
+  .quiz-opt { padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; text-align: left; transition: all 0.2s; color: var(--ink); line-height: 1.4; }
+  .quiz-opt:hover { border-color: #c4b9aa; background: #f0ebe4; transform: translateX(3px); }
+  .quiz-progress { display: flex; gap: 0.3rem; margin-bottom: 1.5rem; }
+  .progress-dot { flex: 1; height: 3px; border-radius: 999px; background: var(--border); transition: background 0.3s; }
+  .progress-dot.done { background: #b8a898; }
+  .progress-dot.current { background: var(--ink); }
+  .quiz-result { background: var(--warm-white); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: center; display: none; }
+  .quiz-result.visible { display: block; animation: fadeUp 0.4s ease; }
+  .result-emoji { font-size: 3rem; margin-bottom: 0.5rem; }
+  .result-title { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 400; margin-bottom: 0.3rem; }
+  .result-subtitle { font-size: 0.8rem; color: var(--muted); margin-bottom: 1.5rem; font-style: italic; }
+  .result-desc { font-size: 0.9rem; line-height: 1.7; color: #3a3028; text-align: left; margin-bottom: 1.5rem; }
+  .result-suggestions { text-align: left; margin-bottom: 1.5rem; }
+  .result-suggestions h4 { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+  .result-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .result-tag { font-size: 0.8rem; padding: 0.3rem 0.7rem; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; transition: all 0.2s; color: var(--muted); }
+  .result-tag:hover { background: #ede5da; color: var(--ink); }
+  .quiz-btn { display: inline-block; padding: 0.7rem 1.8rem; background: var(--ink); color: var(--cream); border: none; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; }
+  .quiz-btn:hover { background: #2e2318; transform: translateY(-1px); }
+  .quiz-btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); margin-left: 0.5rem; }
+  .quiz-btn.ghost:hover { background: #ede5da; color: var(--ink); }
+  .quiz-btn.highlight { background: var(--accent); color: white; margin-left: 0.5rem; }
+  .quiz-btn.highlight:hover { background: #a86538; }
+
+  /* ── JOURNAL PAGE ── */
+  .journal-page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 3rem;
   }
 
-  .info-name {
+  .journal-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .journal-header-left h2 {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 2rem;
-    font-weight: 400;
+    font-size: 2.2rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
     line-height: 1;
   }
 
-  .info-parent {
-    font-size: 0.75rem;
-    color: var(--muted);
-    letter-spacing: 0.04em;
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-    background: var(--panel-color-light, #eee);
-  }
-
-  .info-section-label {
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: 1.2rem 0 0.4rem;
-  }
-
-  .info-desc {
-    font-size: 0.88rem;
-    line-height: 1.7;
-    color: #3a3028;
-  }
-
-  .examples-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .examples-list li {
+  .journal-header-left p {
     font-size: 0.82rem;
-    padding: 0.4rem 0.6rem;
-    background: var(--panel-color-light, #f5f5f5);
-    border-radius: 8px;
-    color: #3a3028;
-    line-height: 1.5;
-  }
-
-  .examples-list li::before {
-    content: '→ ';
-    opacity: 0.5;
-  }
-
-  .related-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.4rem;
-  }
-
-  .related-tag {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.6rem;
-    border: 1px solid var(--border);
-    border-radius: 999px;
     color: var(--muted);
+    margin-top: 0.3rem;
+    font-weight: 300;
+  }
+
+  .new-entry-btn {
+    padding: 0.65rem 1.4rem;
+    background: var(--theme-color);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .related-tag:hover {
-    background: var(--panel-color-light);
-    color: var(--ink);
-  }
-
-  /* ── BROWSE VIEW ── */
-  .browse-view {
-    padding: 2rem 1.5rem;
-    max-width: 960px;
-    margin: 0 auto;
-  }
-
-  .core-section {
-    margin-bottom: 2.5rem;
-  }
-
-  .core-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.5rem;
-    font-weight: 400;
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .core-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
+    transition: all 0.3s;
     flex-shrink: 0;
   }
+  .new-entry-btn:hover { filter: brightness(0.92); transform: translateY(-1px); }
 
-  .emotion-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 0.6rem;
-  }
-
-  .emotion-card {
-    padding: 0.8rem 1rem;
-    border-radius: 12px;
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: var(--warm-white);
-  }
-
-  .emotion-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    border-color: var(--card-color);
-  }
-
-  .emotion-card .card-name {
-    font-size: 0.9rem;
-    font-weight: 500;
-    margin-bottom: 0.2rem;
-  }
-
-  .emotion-card .card-preview {
-    font-size: 0.75rem;
-    color: var(--muted);
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* Modal */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(26,18,8,0.5);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    backdrop-filter: blur(4px);
-  }
-
-  .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
-
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-  .modal {
-    background: var(--warm-white);
-    border-radius: 20px;
-    max-width: 480px;
-    width: 100%;
-    max-height: 85vh;
-    overflow-y: auto;
-    position: relative;
-    animation: slideUp 0.25s ease;
-  }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .modal-top {
-    height: 6px;
-    border-radius: 20px 20px 0 0;
-    background: var(--modal-color, #ccc);
-  }
-
-  .modal-body { padding: 1.5rem 2rem 2rem; }
-
-  .modal-close {
-    position: absolute;
-    top: 1rem; right: 1rem;
-    width: 30px; height: 30px;
-    border: none;
-    background: var(--border);
-    border-radius: 50%;
-    font-size: 1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted);
-    transition: all 0.15s;
-  }
-
-  .modal-close:hover { background: #d4c8bb; }
-
-  /* ── QUIZ VIEW ── */
-  .quiz-wrap {
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem 3rem;
-  }
-
-  .quiz-intro {
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-
-  .quiz-intro h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.8rem;
-    font-weight: 300;
-    margin-bottom: 0.5rem;
-  }
-
-  .quiz-intro p {
-    font-size: 0.85rem;
-    color: var(--muted);
-    line-height: 1.7;
-    max-width: 420px;
-    margin: 0 auto;
-  }
-
-  .quiz-card {
+  /* Check-in form */
+  .checkin-card {
     background: var(--warm-white);
     border: 1px solid var(--border);
     border-radius: 20px;
     padding: 2rem;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    display: none;
   }
 
-  .quiz-step {
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+  .checkin-card.open { display: block; animation: fadeUp 0.3s ease; }
+
+  .checkin-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--theme-color);
+    border-radius: 20px 20px 0 0;
+  }
+
+  .checkin-date {
+    font-size: 0.75rem;
     color: var(--muted);
-    margin-bottom: 0.8rem;
-  }
-
-  .quiz-question {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.4rem;
-    font-weight: 400;
-    line-height: 1.4;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     margin-bottom: 1.4rem;
   }
 
-  .quiz-options {
-    display: grid;
-    gap: 0.5rem;
+  .checkin-section {
+    margin-bottom: 1.4rem;
   }
 
-  .quiz-opt {
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--cream);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem;
-    cursor: pointer;
-    text-align: left;
-    transition: all 0.2s;
-    color: var(--ink);
-    line-height: 1.4;
-  }
-
-  .quiz-opt:hover {
-    border-color: #c4b9aa;
-    background: #f0ebe4;
-    transform: translateX(3px);
-  }
-
-  .quiz-opt.selected {
-    border-color: var(--quiz-accent, #888);
-    background: var(--quiz-accent-light, #eee);
-  }
-
-  .quiz-progress {
-    display: flex;
-    gap: 0.3rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .progress-dot {
-    flex: 1;
-    height: 3px;
-    border-radius: 999px;
-    background: var(--border);
-    transition: background 0.3s;
-  }
-
-  .progress-dot.done { background: #b8a898; }
-  .progress-dot.current { background: var(--ink); }
-
-  .quiz-result {
-    background: var(--warm-white);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 2rem;
-    text-align: center;
-    display: none;
-  }
-
-  .quiz-result.visible { display: block; animation: fadeUp 0.4s ease; }
-
-  .result-emoji { font-size: 3rem; margin-bottom: 0.5rem; }
-
-  .result-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 2rem;
-    font-weight: 400;
-    margin-bottom: 0.3rem;
-  }
-
-  .result-subtitle {
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-bottom: 1.5rem;
-    font-style: italic;
-  }
-
-  .result-desc {
-    font-size: 0.9rem;
-    line-height: 1.7;
-    color: #3a3028;
-    text-align: left;
-    margin-bottom: 1.5rem;
-  }
-
-  .result-suggestions {
-    text-align: left;
-    margin-bottom: 1.5rem;
-  }
-
-  .result-suggestions h4 {
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
+  .checkin-label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.6rem;
+    display: block;
   }
 
-  .result-tags {
+  /* Emotion picker inside journal */
+  .emotion-picker {
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
   }
 
-  .result-tag {
-    font-size: 0.8rem;
-    padding: 0.3rem 0.7rem;
-    border: 1px solid var(--border);
+  .emotion-chip {
+    padding: 0.35rem 0.85rem;
     border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.2s;
     color: var(--muted);
+    background: var(--cream);
   }
 
-  .result-tag:hover { background: #ede5da; color: var(--ink); }
+  .emotion-chip:hover { border-color: #c4b9aa; color: var(--ink); }
 
-  .quiz-btn {
-    display: inline-block;
-    padding: 0.7rem 1.8rem;
-    background: var(--ink);
-    color: var(--cream);
+  .emotion-chip.selected {
+    border-color: var(--chip-color, #888);
+    background: var(--chip-light, #eee);
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* Pre-filled banner */
+  .prefilled-banner {
+    display: none;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1rem;
+    background: var(--theme-light);
+    border-radius: 10px;
+    margin-bottom: 1.2rem;
+    font-size: 0.82rem;
+    color: var(--theme-color);
+    font-weight: 500;
+  }
+
+  .prefilled-banner.visible { display: flex; }
+
+  /* Intensity slider */
+  .intensity-wrap { display: flex; align-items: center; gap: 1rem; }
+  .intensity-wrap input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--border);
+    outline: none;
+  }
+  .intensity-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--theme-color);
+    cursor: pointer;
+  }
+  .intensity-label { font-size: 0.82rem; color: var(--muted); min-width: 60px; text-align: right; }
+
+  /* Journal textarea */
+  .journal-textarea {
+    width: 100%;
+    min-height: 120px;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--ink);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .journal-textarea:focus { border-color: #c4b9aa; }
+  .journal-textarea::placeholder { color: var(--muted); font-style: italic; }
+
+  /* Prompts */
+  .prompt-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+  }
+
+  .prompt-chip {
+    padding: 0.3rem 0.7rem;
+    border: 1px dashed var(--border);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+    font-style: italic;
+  }
+  .prompt-chip:hover { border-color: #c4b9aa; color: var(--ink); background: var(--theme-light); }
+
+  /* Mood score */
+  .mood-score-btns {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .mood-score-btn {
+    flex: 1;
+    padding: 0.5rem 0.2rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--cream);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--muted);
+    line-height: 1.3;
+  }
+
+  .mood-score-btn:hover { background: #ede5da; color: var(--ink); }
+  .mood-score-btn.selected { background: var(--theme-color); color: white; border-color: var(--theme-color); }
+
+  .checkin-actions { display: flex; gap: 0.6rem; margin-top: 1.6rem; }
+
+  .save-btn {
+    padding: 0.65rem 1.8rem;
+    background: var(--theme-color);
+    color: white;
     border: none;
     border-radius: 999px;
     font-family: 'DM Sans', sans-serif;
     font-size: 0.85rem;
     cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 0.5rem;
+    transition: all 0.3s;
   }
-
-  .quiz-btn:hover { background: #2e2318; transform: translateY(-1px); }
-  .quiz-btn.ghost {
+  .save-btn:hover { filter: brightness(0.92); }
+  .cancel-btn {
+    padding: 0.65rem 1.2rem;
     background: transparent;
     color: var(--muted);
     border: 1px solid var(--border);
-    margin-left: 0.5rem;
-  }
-  .quiz-btn.ghost:hover { background: #ede5da; color: var(--ink); }
-
-  .intensity-bar {
-    display: flex;
-    gap: 0.4rem;
-    margin-top: 0.5rem;
-  }
-
-  .intensity-btn {
-    flex: 1;
-    padding: 0.5rem;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--cream);
-    font-size: 0.78rem;
+    border-radius: 999px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
     cursor: pointer;
     transition: all 0.2s;
-    font-family: 'DM Sans', sans-serif;
+  }
+  .cancel-btn:hover { background: #ede5da; color: var(--ink); }
+
+  /* Journal entries list */
+  .entries-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .entries-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
     color: var(--ink);
   }
 
-  .intensity-btn:hover { background: #ede5da; }
+  .entries-count {
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: var(--border);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+  }
+
+  .entries-list { display: flex; flex-direction: column; gap: 1rem; }
+
+  .entry-card {
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+
+  .entry-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+
+  .entry-top-bar { height: 4px; }
+
+  .entry-body { padding: 1.2rem 1.5rem; }
+
+  .entry-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; flex-wrap: wrap; gap: 0.5rem; }
+
+  .entry-date { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.05em; }
+
+  .entry-emotions { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+
+  .entry-emotion-tag {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+
+  .entry-mood-score {
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .entry-intensity-bar {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+    margin-bottom: 0.8rem;
+  }
+
+  .intensity-pip {
+    width: 16px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--border);
+    transition: background 0.2s;
+  }
+  .intensity-pip.filled { background: var(--entry-color, #ccc); }
+
+  .entry-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.98rem;
+    line-height: 1.7;
+    color: #3a3028;
+  }
+
+  .entry-text.preview { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .entry-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 0.8rem; }
+  .entry-expand { font-size: 0.75rem; color: var(--muted); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; transition: color 0.2s; }
+  .entry-expand:hover { color: var(--ink); }
+  .entry-delete { font-size: 0.72rem; color: var(--muted); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; transition: color 0.2s; opacity: 0.5; }
+  .entry-delete:hover { color: #e87070; opacity: 1; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--muted);
+  }
+  .empty-state .empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; }
+  .empty-state p { font-size: 0.88rem; line-height: 1.7; font-style: italic; font-family: 'Cormorant Garamond', serif; }
+
+  /* Streak + stats */
+  .stats-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .stat-card {
+    flex: 1;
+    min-width: 120px;
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.2rem;
+    text-align: center;
+  }
+
+  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 400; line-height: 1; color: var(--ink); }
+  .stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.3rem; }
+
+  /* Mood trend chart */
+  .trend-section { margin-bottom: 2rem; }
+  .trend-title { font-size: 0.78rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.8rem; }
+  .trend-chart { display: flex; align-items: flex-end; gap: 4px; height: 64px; }
+  .trend-bar { flex: 1; border-radius: 4px 4px 0 0; background: var(--bar-color, var(--border)); min-height: 4px; transition: height 0.3s ease; cursor: default; position: relative; }
+  .trend-bar:hover::after { content: attr(data-label); position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: var(--ink); background: var(--warm-white); border: 1px solid var(--border); padding: 0.2rem 0.4rem; border-radius: 6px; white-space: nowrap; pointer-events: none; }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(26,18,8,0.5); z-index: 100; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal { background: var(--warm-white); border-radius: 20px; max-width: 480px; width: 100%; max-height: 85vh; overflow-y: auto; position: relative; animation: slideUp 0.25s ease; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .modal-top { height: 6px; border-radius: 20px 20px 0 0; background: var(--modal-color, #ccc); }
+  .modal-body { padding: 1.5rem 2rem 2rem; }
+  .modal-close { position: absolute; top: 1rem; right: 1rem; width: 30px; height: 30px; border: none; background: var(--border); border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--muted); transition: all 0.15s; }
+  .modal-close:hover { background: #d4c8bb; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--ink);
+    color: var(--cream);
+    padding: 0.7rem 1.4rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
 
   footer {
     text-align: center;
@@ -640,85 +741,232 @@
     z-index: 1;
     font-style: italic;
   }
+
+  @media (max-width: 700px) {
+    .sidebar { display: none; }
+    .app-shell { flex-direction: column; }
+    .mobile-nav { display: flex; }
+  }
+
+  .mobile-nav {
+    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--warm-white);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem;
+    gap: 0.3rem;
+    justify-content: center;
+  }
+
+  .mobile-nav-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .mobile-nav-btn.active { background: var(--accent-light); color: var(--ink); font-weight: 500; }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>The Emotion Wheel</h1>
-  <p>Explore, understand, and name what you're feeling</p>
+<div class="app-shell">
 
-  <div class="tab-bar">
-    <button class="tab active" onclick="switchTab('wheel')">Wheel</button>
-    <button class="tab" onclick="switchTab('browse')">Browse All</button>
-    <button class="tab" onclick="switchTab('quiz')">Find My Feeling</button>
-  </div>
-</header>
-
-<!-- ═══════════════ WHEEL VIEW ═══════════════ -->
-<div class="view active" id="view-wheel">
-  <div class="wheel-layout">
-    <div id="wheel-svg-wrap">
-      <svg id="wheel-svg" viewBox="-260 -260 520 520" xmlns="http://www.w3.org/2000/svg"></svg>
+  <!-- TOP NAV -->
+  <nav class="topnav" id="topnav" role="navigation" aria-label="App navigation">
+    <div class="topnav-brand"></div>
+    <div class="topnav-links">
+      <button class="topnav-btn active" onclick="showPage('wheel')" id="nav-wheel">🌀 Wheel</button>
+      <button class="topnav-btn" onclick="showPage('journal')" id="nav-journal">📓 Journal</button>
     </div>
-    <div class="emotion-info" id="emotion-info">
-      <div class="placeholder" id="info-placeholder">
-        <div class="arrow-hint">☜</div>
-        <p>Click any section of the wheel<br>to learn about that emotion</p>
-      </div>
-      <div class="info-content" id="info-content">
-        <div class="info-header">
-          <span class="info-name" id="info-name"></span>
-          <span class="info-parent" id="info-parent"></span>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ═════════ WHEEL PAGE ═════════ -->
+    <div class="page active" id="page-wheel">
+      <div class="wheel-page-header">
+        <h2>The Emotion Wheel</h2>
+        <p>Explore, understand, and name what you're feeling</p>
+
+        <div class="inner-tab-bar">
+          <button class="inner-tab active" onclick="switchInnerTab('wheel')">Wheel</button>
+          <button class="inner-tab" onclick="switchInnerTab('browse')">Browse All</button>
+          <button class="inner-tab" onclick="switchInnerTab('quiz')">Find My Feeling</button>
         </div>
-        <div class="info-section-label">What it is</div>
-        <p class="info-desc" id="info-desc"></p>
-        <div class="info-section-label">Examples</div>
-        <ul class="examples-list" id="info-examples"></ul>
-        <div class="info-section-label">Related feelings</div>
-        <div class="related-tags" id="info-related"></div>
+      </div>
+
+      <!-- Inner: Wheel -->
+      <div class="inner-view active" id="iview-wheel">
+        <div class="wheel-layout">
+          <div id="wheel-svg-wrap">
+            <svg id="wheel-svg" viewBox="-260 -260 520 520" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+          <div class="emotion-info" id="emotion-info">
+            <div id="panel-top-bar" style="position:absolute;top:0;left:0;right:0;height:8px;border-radius:17px 17px 0 0;background:#e8ddd0;transition:background 0.35s ease;"></div>
+            <div class="placeholder" id="info-placeholder">
+              <div class="arrow-hint">☟</div>
+              <p>Click any section of the wheel<br>to learn about that emotion</p>
+            </div>
+            <div class="info-content" id="info-content">
+              <div class="info-header">
+                <span class="info-name" id="info-name"></span>
+                <span class="info-parent" id="info-parent"></span>
+              </div>
+              <div class="info-section-label" id="sl-what">What it is</div>
+              <p class="info-desc" id="info-desc"></p>
+              <div class="info-section-label" id="sl-examples">Examples</div>
+              <ul class="examples-list" id="info-examples"></ul>
+              <div class="info-section-label" id="sl-related">Related feelings</div>
+              <div class="related-tags" id="info-related"></div>
+              <div class="log-btn-wrap">
+                <button class="log-btn" id="log-from-wheel" onclick="logFromWheel()">
+                  ✦ Log this to my journal
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inner: Browse -->
+      <div class="inner-view" id="iview-browse">
+        <div class="browse-view" id="browse-container"></div>
+      </div>
+
+      <!-- Inner: Quiz -->
+      <div class="inner-view" id="iview-quiz">
+        <div class="quiz-wrap">
+          <div class="quiz-intro">
+            <h2>What am I feeling?</h2>
+            <p>Sometimes emotions are hard to name. Answer a few questions and we'll help you find the word for what's in your body and mind right now.</p>
+          </div>
+
+          <div class="quiz-progress" id="quiz-progress"></div>
+
+          <div class="quiz-card" id="quiz-card">
+            <div class="quiz-step" id="quiz-step"></div>
+            <div class="quiz-question" id="quiz-question"></div>
+            <div class="quiz-options" id="quiz-options"></div>
+          </div>
+
+          <div class="quiz-result" id="quiz-result">
+            <div class="result-emoji" id="result-emoji"></div>
+            <div class="result-title" id="result-title"></div>
+            <div class="result-subtitle" id="result-subtitle"></div>
+            <p class="result-desc" id="result-desc"></p>
+            <div class="result-suggestions">
+              <h4>You might also be feeling</h4>
+              <div class="result-tags" id="result-tags"></div>
+            </div>
+            <button class="quiz-btn" onclick="restartQuiz()">Try again</button>
+            <button class="quiz-btn ghost" onclick="switchInnerTab('browse')">Browse all</button>
+            <button class="quiz-btn highlight" onclick="logFromQuiz()">✦ Log to journal</button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- ═══════════════ BROWSE VIEW ═══════════════ -->
-<div class="view" id="view-browse">
-  <div class="browse-view" id="browse-container"></div>
-</div>
+    <!-- ═════════ JOURNAL PAGE ═════════ -->
+    <div class="page" id="page-journal">
+      <div class="journal-page">
 
-<!-- ═══════════════ QUIZ VIEW ═══════════════ -->
-<div class="view" id="view-quiz">
-  <div class="quiz-wrap">
-    <div class="quiz-intro">
-      <h2>What am I feeling?</h2>
-      <p>Sometimes emotions are hard to name. Answer a few questions and we'll help you find the word for what's in your body and mind right now.</p>
-    </div>
+        <div class="journal-header">
+          <div class="journal-header-left">
+            <h2>Mood Journal</h2>
+            <p>Track how you feel over time</p>
+          </div>
+          <button class="new-entry-btn" onclick="openCheckin(null)">+ New check-in</button>
+        </div>
 
-    <div class="quiz-progress" id="quiz-progress"></div>
+        <!-- Stats row -->
+        <div class="stats-row" id="stats-row">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-entries">0</div>
+            <div class="stat-label">Entries</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-streak">0</div>
+            <div class="stat-label">Day streak</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-avg">—</div>
+            <div class="stat-label">Avg mood</div>
+          </div>
+        </div>
 
-    <div class="quiz-card" id="quiz-card">
-      <div class="quiz-step" id="quiz-step"></div>
-      <div class="quiz-question" id="quiz-question"></div>
-      <div class="quiz-options" id="quiz-options"></div>
-    </div>
+        <!-- Trend chart (shown when 2+ entries) -->
+        <div class="trend-section" id="trend-section" style="display:none">
+          <div class="trend-title">Mood over time</div>
+          <div class="trend-chart" id="trend-chart"></div>
+        </div>
 
-    <div class="quiz-result" id="quiz-result">
-      <div class="result-emoji" id="result-emoji"></div>
-      <div class="result-title" id="result-title"></div>
-      <div class="result-subtitle" id="result-subtitle"></div>
-      <p class="result-desc" id="result-desc"></p>
-      <div class="result-suggestions">
-        <h4>You might also be feeling</h4>
-        <div class="result-tags" id="result-tags"></div>
+        <!-- Check-in form -->
+        <div class="checkin-card" id="checkin-card">
+          <div class="checkin-date" id="checkin-date"></div>
+
+          <div class="prefilled-banner" id="prefilled-banner">
+            <span>✦</span>
+            <span id="prefilled-text"></span>
+          </div>
+
+          <div class="checkin-section">
+            <span class="checkin-label">What are you feeling?</span>
+            <div class="emotion-picker" id="emotion-picker"></div>
+          </div>
+
+          <div class="checkin-section">
+            <span class="checkin-label">Intensity</span>
+            <div class="intensity-wrap">
+              <input type="range" min="1" max="10" value="5" id="intensity-slider" oninput="updateIntensityLabel()">
+              <span class="intensity-label" id="intensity-label">5 / 10</span>
+            </div>
+          </div>
+
+          <div class="checkin-section">
+            <span class="checkin-label">Overall mood today</span>
+            <div class="mood-score-btns" id="mood-score-btns">
+              <button class="mood-score-btn" onclick="setMoodScore(1, this)">😔<br><span style="font-size:0.68rem">Low</span></button>
+              <button class="mood-score-btn" onclick="setMoodScore(2, this)">😕<br><span style="font-size:0.68rem">Tough</span></button>
+              <button class="mood-score-btn" onclick="setMoodScore(3, this)">😐<br><span style="font-size:0.68rem">Okay</span></button>
+              <button class="mood-score-btn" onclick="setMoodScore(4, this)">🙂<br><span style="font-size:0.68rem">Good</span></button>
+              <button class="mood-score-btn" onclick="setMoodScore(5, this)">😄<br><span style="font-size:0.68rem">Great</span></button>
+            </div>
+          </div>
+
+          <div class="checkin-section">
+            <span class="checkin-label">Notes (optional)</span>
+            <textarea class="journal-textarea" id="journal-textarea" placeholder="Write whatever comes up…"></textarea>
+            <div class="prompt-chips" id="prompt-chips"></div>
+          </div>
+
+          <div class="checkin-actions">
+            <button class="save-btn" onclick="saveEntry()">Save entry</button>
+            <button class="cancel-btn" onclick="closeCheckin()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Entries -->
+        <div class="entries-header">
+          <div class="entries-title">Your entries</div>
+          <div class="entries-count" id="entries-count">0 entries</div>
+        </div>
+        <div class="entries-list" id="entries-list"></div>
+
       </div>
-      <button class="quiz-btn" onclick="restartQuiz()">Try again</button>
-      <button class="quiz-btn ghost" onclick="switchTab('browse')">Browse all emotions</button>
     </div>
-  </div>
+
+  </main>
 </div>
 
-<!-- Modal -->
+<!-- Modal (for browse) -->
 <div class="modal-overlay" id="modal" onclick="closeModal(event)">
   <div class="modal" id="modal-box">
     <div class="modal-top" id="modal-top"></div>
@@ -734,156 +982,256 @@
       <ul class="examples-list" id="modal-examples"></ul>
       <div class="info-section-label">Related feelings</div>
       <div class="related-tags" id="modal-related"></div>
+      <div style="margin-top:1.4rem">
+        <button class="log-btn" id="log-from-modal" onclick="logFromModal()" style="background:#e8ddd0">✦ Log this to my journal</button>
+      </div>
     </div>
   </div>
 </div>
 
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <footer>Based on Plutchik's Wheel of Emotions &amp; clinical emotion research · For reflection, not diagnosis</footer>
 
 <script>
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════
 //  EMOTION DATA
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════
 const CORES = [
-  { id: 'joy',          label: 'Joy',          color: '#f5c842', light: '#fdf0b0' },
-  { id: 'trust',        label: 'Trust',         color: '#6bc17a', light: '#c5e8ca' },
-  { id: 'fear',         label: 'Fear',          color: '#7aaed4', light: '#c0d9ee' },
-  { id: 'surprise',     label: 'Surprise',      color: '#b07ed4', light: '#d9c0ee' },
-  { id: 'sadness',      label: 'Sadness',       color: '#7b9fd4', light: '#bdd0ee' },
-  { id: 'disgust',      label: 'Disgust',       color: '#7abc7a', light: '#bce0bc' },
-  { id: 'anger',        label: 'Anger',         color: '#e87070', light: '#f4bcbc' },
-  { id: 'anticipation', label: 'Anticipation',  color: '#f0a040', light: '#f8d4a0' },
+  { id: 'joy',          label: 'Joy',          color: '#f5c842', light: '#fef9df' },
+  { id: 'trust',        label: 'Trust',         color: '#6bc17a', light: '#e8f6ea' },
+  { id: 'fear',         label: 'Fear',          color: '#7aaed4', light: '#e6f0f8' },
+  { id: 'surprise',     label: 'Surprise',      color: '#b07ed4', light: '#f0e6f8' },
+  { id: 'sadness',      label: 'Sadness',       color: '#7b9fd4', light: '#e5ecf8' },
+  { id: 'disgust',      label: 'Disgust',       color: '#7abc7a', light: '#e4f3e4' },
+  { id: 'anger',        label: 'Anger',         color: '#e87070', light: '#fbe4e4' },
+  { id: 'anticipation', label: 'Anticipation',  color: '#f0a040', light: '#fceed9' },
 ];
 
 const EMOTIONS = {
   joy: {
-    core: 'joy',
-    description: 'Joy is a warm, uplifting feeling of happiness and delight. It arises when things feel right, good, or beautiful — a sense that life is full and meaningful.',
+    core: 'joy', description: 'Joy is a warm, uplifting feeling of happiness and delight. It arises when things feel right, good, or beautiful — a sense that life is full and meaningful.',
     examples: ['Laughing with a close friend', 'Watching a child take their first steps', 'Finishing something you worked hard on', 'A perfect sunny afternoon'],
     related: ['serenity', 'ecstasy', 'love', 'optimism'],
     children: [
-      { id: 'serenity',   label: 'Serenity',   desc: 'A quiet, peaceful form of joy — calm contentment without excitement. The feeling of being at rest and at ease with the world.', examples: ['Sitting by a lake at dusk', 'A slow morning with coffee', 'The moment after a long cry when everything feels still'] },
-      { id: 'ecstasy',    label: 'Ecstasy',    desc: 'Intense, overwhelming joy that fills the body — sometimes felt as euphoria, exhilaration, or bliss. The most extreme end of happiness.', examples: ['Hearing your favorite song live', 'Falling in love', 'An unexpected piece of wonderful news'] },
+      { id: 'serenity',     label: 'Serenity',     desc: 'A quiet, peaceful form of joy — calm contentment without excitement. The feeling of being at rest and at ease with the world.', examples: ['Sitting by a lake at dusk', 'A slow morning with coffee', 'The moment after a long cry when everything feels still'] },
+      { id: 'ecstasy',      label: 'Ecstasy',      desc: 'Intense, overwhelming joy that fills the body — sometimes felt as euphoria, exhilaration, or bliss.', examples: ['Hearing your favorite song live', 'Falling in love', 'An unexpected piece of wonderful news'] },
       { id: 'cheerfulness', label: 'Cheerfulness', desc: 'A light, buoyant mood — feeling upbeat and positive without any particular cause. Easy warmth and friendliness.', examples: ['A good night\'s sleep leaving you in a great mood', 'Singing along to the radio', 'Feeling ready to take on the day'] },
-      { id: 'zest',       label: 'Zest',       desc: 'Enthusiastic energy and eagerness — joy with vitality. Feeling alive and engaged with what you\'re doing.', examples: ['Starting a passion project', 'A great workout', 'Planning a trip you\'re excited about'] },
+      { id: 'zest',         label: 'Zest',         desc: 'Enthusiastic energy and eagerness — joy with vitality. Feeling alive and engaged with what you\'re doing.', examples: ['Starting a passion project', 'A great workout', 'Planning a trip you\'re excited about'] },
     ]
   },
   trust: {
-    core: 'trust',
-    description: 'Trust is the feeling of safety, reliability, and confidence in someone or something. It allows us to be vulnerable and open without fear.',
-    examples: ['Telling a secret to a close friend', 'Relying on a partner to follow through', 'Feeling safe in a doctor\'s care', 'Believing in an institution'],
+    core: 'trust', description: 'Trust is the feeling of safety, reliability, and confidence in someone or something. It allows us to be vulnerable and open without fear.',
+    examples: ['Telling a secret to a close friend', 'Relying on a partner to follow through', 'Feeling safe in a doctor\'s care'],
     related: ['acceptance', 'admiration', 'love', 'submission'],
     children: [
-      { id: 'acceptance', label: 'Acceptance', desc: 'Feeling comfortable with reality as it is — yourself, others, or circumstances. Not needing things to be different.', examples: ['Making peace with a past mistake', 'Embracing someone\'s flaws', 'Letting go of a plan that didn\'t work out'] },
-      { id: 'admiration', label: 'Admiration', desc: 'A deep respect and appreciation for someone\'s qualities, actions, or achievements. Looking up to someone.', examples: ['Watching an expert at work', 'Reading about someone\'s courage', 'Your child doing something kind unprompted'] },
-      { id: 'confidence', label: 'Confidence', desc: 'A secure belief in oneself or others — feeling capable, solid, and certain. Trust directed inward.', examples: ['Walking into a room knowing your material', 'Feeling prepared for a hard conversation', 'Trusting your own judgment after experience'] },
-      { id: 'openness',   label: 'Openness',   desc: 'A willingness to receive — new ideas, different people, or changed circumstances. Feeling receptive and curious rather than defensive.', examples: ['Trying a new cuisine', 'Hearing a perspective that challenges you', 'Meeting someone very different from yourself'] },
+      { id: 'acceptance',   label: 'Acceptance',   desc: 'Feeling comfortable with reality as it is — yourself, others, or circumstances. Not needing things to be different.', examples: ['Making peace with a past mistake', 'Embracing someone\'s flaws', 'Letting go of a plan that didn\'t work'] },
+      { id: 'admiration',   label: 'Admiration',   desc: 'A deep respect and appreciation for someone\'s qualities, actions, or achievements.', examples: ['Watching an expert at work', 'Reading about someone\'s courage', 'Your child doing something kind unprompted'] },
+      { id: 'confidence',   label: 'Confidence',   desc: 'A secure belief in oneself or others — feeling capable, solid, and certain.', examples: ['Walking into a room knowing your material', 'Feeling prepared for a hard conversation'] },
+      { id: 'openness',     label: 'Openness',     desc: 'A willingness to receive — new ideas, different people, or changed circumstances. Feeling receptive and curious.', examples: ['Trying a new cuisine', 'Hearing a perspective that challenges you'] },
     ]
   },
   fear: {
-    core: 'fear',
-    description: 'Fear is the response to perceived threat or danger — real or imagined. It activates the body\'s alarm system and prepares us to protect ourselves.',
-    examples: ['Hearing footsteps behind you at night', 'Getting a frightening diagnosis', 'Public speaking', 'Being in an unsafe situation'],
+    core: 'fear', description: 'Fear is the response to perceived threat or danger — real or imagined. It activates the body\'s alarm system and prepares us to protect ourselves.',
+    examples: ['Hearing footsteps behind you at night', 'Getting a frightening diagnosis', 'Public speaking'],
     related: ['apprehension', 'terror', 'anxiety', 'awe'],
     children: [
-      { id: 'apprehension', label: 'Apprehension', desc: 'Mild, anticipatory fear — a low-level unease about something that might happen. A nagging worry.', examples: ['Waiting for test results', 'Before a difficult conversation', 'The Sunday evening feeling before the work week'] },
-      { id: 'terror',     label: 'Terror',     desc: 'Extreme, overwhelming fear — an intense alarm response to perceived immediate danger. The most intense form of fear.', examples: ['Being in a car accident', 'A sudden fall', 'An unexpected threat in the night'] },
-      { id: 'anxiety',    label: 'Anxiety',    desc: 'A persistent, often diffuse worry or unease — fear without a clear, immediate cause. Can feel like a hum of dread.', examples: ['Worrying about money', 'Ruminating on what others think of you', 'Racing thoughts before sleep'] },
-      { id: 'dread',      label: 'Dread',      desc: 'Heavy anticipation of something bad. Different from anxiety in that the feared thing feels certain, not just possible.', examples: ['Knowing you have to give bad news', 'Anticipating a painful medical procedure', 'A meeting you\'ve been dreading for weeks'] },
+      { id: 'apprehension', label: 'Apprehension', desc: 'Mild, anticipatory fear — a low-level unease about something that might happen. A nagging worry.', examples: ['Waiting for test results', 'Before a difficult conversation', 'The Sunday evening feeling'] },
+      { id: 'terror',       label: 'Terror',       desc: 'Extreme, overwhelming fear — an intense alarm response to perceived immediate danger.', examples: ['Being in a car accident', 'A sudden fall', 'An unexpected threat in the night'] },
+      { id: 'anxiety',      label: 'Anxiety',      desc: 'A persistent, often diffuse worry or unease — fear without a clear, immediate cause. Can feel like a hum of dread.', examples: ['Worrying about money', 'Ruminating on what others think', 'Racing thoughts before sleep'] },
+      { id: 'dread',        label: 'Dread',        desc: 'Heavy anticipation of something bad. The feared thing feels certain, not just possible.', examples: ['Knowing you have to give bad news', 'Anticipating a painful medical procedure'] },
     ]
   },
   surprise: {
-    core: 'surprise',
-    description: 'Surprise is the brief emotional response to something unexpected. It can quickly shift into any other emotion — joy, fear, anger, or curiosity — depending on whether the surprise is pleasant or not.',
-    examples: ['An unexpected gift', 'A plot twist in a book', 'News you didn\'t see coming', 'Someone doing something completely out of character'],
+    core: 'surprise', description: 'Surprise is the brief emotional response to something unexpected. It can quickly shift into any other emotion depending on whether the surprise is pleasant or not.',
+    examples: ['An unexpected gift', 'A plot twist in a book', 'News you didn\'t see coming'],
     related: ['distraction', 'amazement', 'awe', 'confusion'],
     children: [
-      { id: 'distraction', label: 'Distraction', desc: 'A mild surprise that briefly pulls attention away — a moment of "wait, what?" before returning to normal.', examples: ['An unusual sound while working', 'Forgetting what you were about to say', 'A strange coincidence'] },
-      { id: 'amazement',  label: 'Amazement',  desc: 'Wonder and awe in the face of something extraordinary. Surprise that lingers in delight.', examples: ['Seeing the Grand Canyon for the first time', 'Watching a stunning performance', 'A scientific fact that blows your mind'] },
-      { id: 'confusion',  label: 'Confusion',  desc: 'When something doesn\'t make sense and the mind can\'t immediately process it. Surprise mixed with uncertainty.', examples: ['A contradictory message from someone you trust', 'Instructions that aren\'t clear', 'Waking from a strange dream'] },
-      { id: 'awe',        label: 'Awe',        desc: 'A feeling of reverence in the presence of something vast, powerful, or transcendent. Surprise that opens into humility and wonder.', examples: ['A starry sky away from city lights', 'Witnessing an act of great courage', 'A piece of music that stops time'] },
+      { id: 'distraction',  label: 'Distraction',  desc: 'A mild surprise that briefly pulls attention away — a moment of "wait, what?" before returning to normal.', examples: ['An unusual sound while working', 'Forgetting what you were about to say'] },
+      { id: 'amazement',    label: 'Amazement',    desc: 'Wonder and awe in the face of something extraordinary. Surprise that lingers in delight.', examples: ['Seeing the Grand Canyon for the first time', 'Watching a stunning performance'] },
+      { id: 'confusion',    label: 'Confusion',    desc: 'When something doesn\'t make sense and the mind can\'t immediately process it. Surprise mixed with uncertainty.', examples: ['A contradictory message from someone you trust', 'Instructions that aren\'t clear'] },
+      { id: 'awe',          label: 'Awe',          desc: 'A feeling of reverence in the presence of something vast, powerful, or transcendent.', examples: ['A starry sky away from city lights', 'A piece of music that stops time'] },
     ]
   },
   sadness: {
-    core: 'sadness',
-    description: 'Sadness is the natural response to loss, disappointment, or suffering. It slows us down, turns us inward, and often helps us process and heal.',
-    examples: ['Losing someone you love', 'A friendship drifting apart', 'Failing after trying hard', 'Watching someone else suffer'],
+    core: 'sadness', description: 'Sadness is the natural response to loss, disappointment, or suffering. It slows us down, turns us inward, and often helps us process and heal.',
+    examples: ['Losing someone you love', 'A friendship drifting apart', 'Failing after trying hard'],
     related: ['pensiveness', 'grief', 'loneliness', 'disappointment'],
     children: [
-      { id: 'pensiveness', label: 'Pensiveness', desc: 'A gentle, quiet sadness — reflective and melancholy. The bittersweet feeling of missing something or someone.', examples: ['Looking through old photos', 'A song that takes you back', 'The end of a wonderful trip'] },
-      { id: 'grief',      label: 'Grief',      desc: 'Deep sorrow over a significant loss — a person, relationship, possibility, or version of yourself. Grief can be all-consuming.', examples: ['Losing a loved one', 'End of a long relationship', 'Losing a job that defined you', 'A miscarriage'] },
-      { id: 'loneliness', label: 'Loneliness', desc: 'The ache of disconnection — feeling unseen, unheard, or alone. Can happen even in a crowd.', examples: ['Being far from home', 'Not feeling understood by the people around you', 'Missing a specific person deeply'] },
-      { id: 'disappointment', label: 'Disappointment', desc: 'Sadness when reality falls short of expectation — for yourself, others, or a situation.', examples: ['Being passed over for something you worked toward', 'Someone letting you down', 'A movie that didn\'t live up to the hype'] },
+      { id: 'pensiveness',    label: 'Pensiveness',    desc: 'A gentle, quiet sadness — reflective and melancholy. The bittersweet feeling of missing something.', examples: ['Looking through old photos', 'A song that takes you back', 'The end of a wonderful trip'] },
+      { id: 'grief',          label: 'Grief',          desc: 'Deep sorrow over a significant loss — a person, relationship, possibility, or version of yourself.', examples: ['Losing a loved one', 'End of a long relationship', 'Losing a job that defined you'] },
+      { id: 'loneliness',     label: 'Loneliness',     desc: 'The ache of disconnection — feeling unseen, unheard, or alone. Can happen even in a crowd.', examples: ['Being far from home', 'Not feeling understood by people around you'] },
+      { id: 'disappointment', label: 'Disappointment', desc: 'Sadness when reality falls short of expectation — for yourself, others, or a situation.', examples: ['Being passed over for something you worked toward', 'Someone letting you down'] },
     ]
   },
   disgust: {
-    core: 'disgust',
-    description: 'Disgust is a powerful rejection response — a pulling away from something perceived as harmful, offensive, or morally wrong. It protects us from contamination (physical or moral).',
-    examples: ['Seeing something spoiled or rotten', 'Witnessing cruelty or injustice', 'Behavior that violates your values', 'A smell that triggers revulsion'],
+    core: 'disgust', description: 'Disgust is a powerful rejection response — a pulling away from something perceived as harmful, offensive, or morally wrong.',
+    examples: ['Seeing something spoiled or rotten', 'Witnessing cruelty or injustice', 'Behavior that violates your values'],
     related: ['boredom', 'loathing', 'contempt', 'revulsion'],
     children: [
-      { id: 'boredom',    label: 'Boredom',    desc: 'A mild form of disgust or withdrawal — finding something so uninteresting or pointless that it creates discomfort. Not just neutral, but a low-level aversion.', examples: ['A meeting that could have been an email', 'Waiting with nothing to do', 'Work that feels meaningless'] },
-      { id: 'loathing',   label: 'Loathing',   desc: 'Intense disgust — a strong aversion or deep hatred, often for something that feels deeply wrong or threatening to one\'s sense of what\'s right.', examples: ['Learning of serious cruelty', 'A betrayal of trust', 'Something that violates your deepest values'] },
-      { id: 'contempt',   label: 'Contempt',   desc: 'A cold form of disgust directed at people — a sense of superiority mixed with disdain. Feeling someone is beneath respect.', examples: ['Watching someone act hypocritically', 'Witnessing arrogance', 'Dismissing someone as not worth engaging'] },
-      { id: 'revulsion',  label: 'Revulsion',  desc: 'A visceral, physical disgust reaction — the body recoiling from something offensive to the senses or moral compass.', examples: ['Encountering extreme filth', 'Graphic images you wish you hadn\'t seen', 'Hearing about abuse'] },
+      { id: 'boredom',    label: 'Boredom',    desc: 'A mild form of disgust or withdrawal — finding something so uninteresting it creates discomfort.', examples: ['A meeting that could have been an email', 'Waiting with nothing to do', 'Work that feels meaningless'] },
+      { id: 'loathing',  label: 'Loathing',   desc: 'Intense disgust — a strong aversion or deep hatred, often for something that feels deeply wrong.', examples: ['Learning of serious cruelty', 'A betrayal of trust'] },
+      { id: 'contempt',  label: 'Contempt',   desc: 'A cold form of disgust directed at people — a sense of superiority mixed with disdain.', examples: ['Watching someone act hypocritically', 'Witnessing arrogance'] },
+      { id: 'revulsion', label: 'Revulsion',  desc: 'A visceral, physical disgust reaction — the body recoiling from something offensive to the senses or moral compass.', examples: ['Encountering extreme filth', 'Hearing about abuse'] },
     ]
   },
   anger: {
-    core: 'anger',
-    description: 'Anger arises when we feel wronged, threatened, or blocked from something important to us. It\'s energy that motivates action — to protect, correct, or defend.',
-    examples: ['Being treated unfairly', 'Watching an injustice', 'Feeling dismissed or disrespected', 'Someone violating your boundaries'],
+    core: 'anger', description: 'Anger arises when we feel wronged, threatened, or blocked from something important to us. It\'s energy that motivates action — to protect, correct, or defend.',
+    examples: ['Being treated unfairly', 'Watching an injustice', 'Feeling dismissed or disrespected'],
     related: ['annoyance', 'rage', 'frustration', 'contempt'],
     children: [
-      { id: 'annoyance',  label: 'Annoyance',  desc: 'Mild anger at something irritating or inconvenient. A low-level friction that nudges you toward fixing or avoiding something.', examples: ['A noisy neighbor', 'Repeated interruptions', 'Technology not working', 'Small rudeness'] },
-      { id: 'rage',       label: 'Rage',       desc: 'Intense, overwhelming anger — hot and consuming. The body is flooded with the need to act against a perceived threat or injustice.', examples: ['Witnessing extreme injustice', 'Feeling severely violated or betrayed', 'Accumulated anger finally breaking through'] },
-      { id: 'frustration', label: 'Frustration', desc: 'Anger from being blocked or unable to achieve something you\'re trying to do. The feeling of hitting a wall.', examples: ['Not being able to communicate something clearly', 'A project that won\'t cooperate', 'Repeating the same conversation without resolution'] },
-      { id: 'indignation', label: 'Indignation', desc: 'Righteous anger at something unjust or unworthy. Feels moral — anger in response to a violation of fairness or dignity.', examples: ['Seeing someone mistreated', 'A rule that seems deeply unfair', 'Being blamed for something you didn\'t do'] },
+      { id: 'annoyance',   label: 'Annoyance',   desc: 'Mild anger at something irritating or inconvenient. A low-level friction that nudges you toward fixing or avoiding something.', examples: ['A noisy neighbor', 'Repeated interruptions', 'Technology not working'] },
+      { id: 'rage',        label: 'Rage',        desc: 'Intense, overwhelming anger — hot and consuming. The body is flooded with the need to act.', examples: ['Witnessing extreme injustice', 'Feeling severely violated or betrayed'] },
+      { id: 'frustration', label: 'Frustration', desc: 'Anger from being blocked or unable to achieve something you\'re trying to do. The feeling of hitting a wall.', examples: ['Not being able to communicate something clearly', 'A project that won\'t cooperate'] },
+      { id: 'indignation', label: 'Indignation', desc: 'Righteous anger at something unjust or unworthy. Feels moral — anger in response to a violation of fairness.', examples: ['Seeing someone mistreated', 'Being blamed for something you didn\'t do'] },
     ]
   },
   anticipation: {
-    core: 'anticipation',
-    description: 'Anticipation is the forward-looking emotion — scanning the future with either hope or wariness. It sharpens attention and prepares us to engage with what\'s coming.',
-    examples: ['Waiting for an important day to arrive', 'The night before a big event', 'Suspense during a movie', 'Planning something exciting'],
+    core: 'anticipation', description: 'Anticipation is the forward-looking emotion — scanning the future with either hope or wariness. It sharpens attention and prepares us to engage with what\'s coming.',
+    examples: ['Waiting for an important day to arrive', 'The night before a big event', 'Planning something exciting'],
     related: ['interest', 'vigilance', 'curiosity', 'optimism'],
     children: [
-      { id: 'interest',   label: 'Interest',   desc: 'Mild, pleasant anticipation — leaning toward something with curiosity. The spark that precedes engagement or learning.', examples: ['A topic that catches your attention', 'Meeting someone new with potential', 'The beginning of an intriguing book'] },
-      { id: 'vigilance',  label: 'Vigilance',  desc: 'Heightened, alert anticipation — watchfulness and readiness. Scanning the environment carefully because something matters or could go wrong.', examples: ['Walking in an unfamiliar place at night', 'Awaiting news that could change things', 'Protecting something or someone important'] },
+      { id: 'interest',   label: 'Interest',   desc: 'Mild, pleasant anticipation — leaning toward something with curiosity. The spark that precedes engagement.', examples: ['A topic that catches your attention', 'Meeting someone new with potential'] },
+      { id: 'vigilance',  label: 'Vigilance',  desc: 'Heightened, alert anticipation — watchfulness and readiness. Scanning carefully because something matters.', examples: ['Walking in an unfamiliar place at night', 'Awaiting news that could change things'] },
       { id: 'excitement', label: 'Excitement', desc: 'Energized anticipation mixed with joy — a buzzing readiness for something good that\'s coming.', examples: ['The day before a vacation', 'A first date', 'Starting something you\'ve been dreaming about'] },
-      { id: 'hope',       label: 'Hope',       desc: 'Anticipation tempered by uncertainty — wanting a good outcome while knowing it isn\'t guaranteed. Hope requires courage.', examples: ['Waiting on a job application', 'Trying something new after a setback', 'Believing a relationship can improve'] },
+      { id: 'hope',       label: 'Hope',       desc: 'Anticipation tempered by uncertainty — wanting a good outcome while knowing it isn\'t guaranteed.', examples: ['Waiting on a job application', 'Trying something new after a setback'] },
     ]
   },
 };
 
-// Flatten all emotions for lookup
+// Flatten
 const ALL_EMOTIONS = {};
 Object.entries(EMOTIONS).forEach(([coreId, coreData]) => {
   const core = CORES.find(c => c.id === coreId);
-  ALL_EMOTIONS[coreId] = {
-    ...coreData,
-    id: coreId,
-    name: core.label,
-    color: core.color,
-    light: core.light,
-    isCore: true,
-  };
+  ALL_EMOTIONS[coreId] = { ...coreData, id: coreId, name: core.label, color: core.color, light: core.light, isCore: true };
   coreData.children.forEach(child => {
-    ALL_EMOTIONS[child.id] = {
-      id: child.id,
-      name: child.label,
-      description: child.desc,
-      examples: child.examples,
-      related: coreData.related,
-      core: coreId,
-      color: core.color,
-      light: core.light,
-      isCore: false,
-    };
+    ALL_EMOTIONS[child.id] = { id: child.id, name: child.label, description: child.desc, examples: child.examples, related: coreData.related, core: coreId, color: core.color, light: core.light, isCore: false };
   });
 });
 
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════
+//  GLOBAL THEME
+// ══════════════════════════════════════════
+function setTheme(color, light) {
+  const root = document.documentElement;
+  root.style.setProperty('--theme-color', color);
+  root.style.setProperty('--theme-light', light);
+
+  // Top nav — bottom border + light bg tint
+  const topnav = document.getElementById('topnav');
+  if (topnav) {
+    topnav.style.borderBottomColor = color;
+    topnav.style.borderBottomWidth = '3px';
+    topnav.style.backgroundColor = light;
+  }
+
+  // Active nav button
+  document.querySelectorAll('.topnav-btn.active').forEach(b => {
+    b.style.borderColor = color;
+    b.style.background = light;
+    b.style.color = darken(color, 0.3);
+  });
+
+  // Info panel — thick solid border + solid light background
+  const panel = document.getElementById('emotion-info');
+  if (panel) {
+    panel.style.borderColor = color;
+    panel.style.borderWidth = '3px';
+    panel.style.backgroundColor = light;
+  }
+
+  // Real top bar div
+  const topBar = document.getElementById('panel-top-bar');
+  if (topBar) topBar.style.background = color;
+
+  // Info name
+  const infoName = document.getElementById('info-name');
+  if (infoName) infoName.style.color = darken(color, 0.22);
+
+  // Section labels by ID
+  ['sl-what','sl-examples','sl-related'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.color = darken(color, 0.1);
+  });
+
+  // Example list items — solid light bg + thick color left border
+  document.querySelectorAll('#info-examples li').forEach(li => {
+    li.style.backgroundColor = '#fdf9f4';
+    li.style.borderLeftColor = color;
+    li.style.borderLeftWidth = '4px';
+  });
+
+  // Related tags
+  document.querySelectorAll('#info-related .related-tag').forEach(tag => {
+    tag.style.borderColor = color;
+    tag.style.color = darken(color, 0.28);
+  });
+
+  // Log button
+  const logBtn = document.getElementById('log-from-wheel');
+  if (logBtn) { logBtn.style.backgroundColor = color; logBtn.style.color = 'white'; }
+
+  // Save button
+  document.querySelectorAll('.save-btn').forEach(b => { b.style.backgroundColor = color; b.style.color = 'white'; });
+
+  // New entry button
+  document.querySelectorAll('.new-entry-btn').forEach(b => { b.style.backgroundColor = color; b.style.color = 'white'; });
+
+  // Quiz highlight button
+  document.querySelectorAll('.quiz-btn.highlight').forEach(b => { b.style.backgroundColor = color; b.style.color = 'white'; });
+
+  // Checkin card accent
+  const checkinCard = document.getElementById('checkin-card');
+  if (checkinCard) { checkinCard.style.borderColor = color; checkinCard.style.borderWidth = '3px'; }
+
+  // Modal top bar
+  const modalTop = document.getElementById('modal-top');
+  if (modalTop) modalTop.style.backgroundColor = color;
+
+  // Body background — solid very light tint
+  document.body.style.backgroundColor = light + '33'; // ~20% opacity approximation via hex doesn't exist, use inline
+  document.body.style.background = light;
+  // Actually just use a light wash — set as a very faint solid
+}
+
+function darken(hex, amount) {
+  // amount 0–1: darken the hex color
+  let r = parseInt(hex.slice(1,3),16);
+  let g = parseInt(hex.slice(3,5),16);
+  let b = parseInt(hex.slice(5,7),16);
+  r = Math.max(0, Math.round(r * (1 - amount)));
+  g = Math.max(0, Math.round(g * (1 - amount)));
+  b = Math.max(0, Math.round(b * (1 - amount)));
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
+// ══════════════════════════════════════════
+//  PAGE NAVIGATION
+// ══════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.topnav-btn').forEach(b => b.classList.remove('active'));
+  const nav = document.getElementById('nav-' + name);
+  if (nav) nav.classList.add('active');
+  if (name === 'journal') renderJournal();
+}
+
+// ══════════════════════════════════════════
+//  WHEEL INNER TABS
+// ══════════════════════════════════════════
+function switchInnerTab(name) {
+  document.querySelectorAll('.inner-view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('iview-' + name).classList.add('active');
+  const tabs = { wheel: 0, browse: 1, quiz: 2 };
+  document.querySelectorAll('.inner-tab')[tabs[name]].classList.add('active');
+}
+
+// ══════════════════════════════════════════
 //  WHEEL DRAWING
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════
 function polarToXY(angleDeg, radius) {
   const rad = (angleDeg - 90) * Math.PI / 180;
   return [radius * Math.cos(rad), radius * Math.sin(rad)];
@@ -911,24 +1259,24 @@ function rotateText(startAngle, endAngle) {
   return angle;
 }
 
+function lightenHex(hex, amount) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgb(${Math.round(r+(255-r)*amount)},${Math.round(g+(255-g)*amount)},${Math.round(b+(255-b)*amount)})`;
+}
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 let selectedId = null;
 
 function buildWheel() {
   const svg = document.getElementById('wheel-svg');
   svg.innerHTML = '';
-
-  const N = CORES.length;
-  const sliceDeg = 360 / N;
-  const GAP = 1.2;
+  const N = CORES.length, sliceDeg = 360 / N, GAP = 1.2;
 
   CORES.forEach((core, i) => {
     const coreData = EMOTIONS[core.id];
     const startAngle = i * sliceDeg + GAP / 2;
     const endAngle = (i + 1) * sliceDeg - GAP / 2;
-    const midAngle = (startAngle + endAngle) / 2;
 
-    // ── Core ring (r 80-140) ──
     const coreG = document.createElementNS(SVG_NS, 'g');
     coreG.classList.add('wheel-sector');
     coreG.dataset.id = core.id;
@@ -950,15 +1298,12 @@ function buildWheel() {
     coreG.addEventListener('click', () => selectEmotion(core.id));
     svg.appendChild(coreG);
 
-    // ── Child slices (r 145-245) ──
     const children = coreData.children;
     const childSlice = sliceDeg / children.length;
 
     children.forEach((child, j) => {
       const cs = startAngle + j * childSlice + GAP / 4;
       const ce = startAngle + (j + 1) * childSlice - GAP / 4;
-
-      // Two outer rings per child
       const innerColor = lightenHex(core.color, 0.25);
       const outerColor = lightenHex(core.color, 0.5);
 
@@ -966,7 +1311,6 @@ function buildWheel() {
       childG.classList.add('wheel-sector');
       childG.dataset.id = child.id;
 
-      // Inner child ring (145-195)
       const p1 = document.createElementNS(SVG_NS, 'path');
       p1.setAttribute('d', arcPath(cs, ce, 145, 195));
       p1.setAttribute('fill', innerColor);
@@ -974,7 +1318,6 @@ function buildWheel() {
       p1.setAttribute('stroke-width', '1');
       childG.appendChild(p1);
 
-      // Outer child ring (198-248)
       const p2 = document.createElementNS(SVG_NS, 'path');
       p2.setAttribute('d', arcPath(cs, ce, 198, 248));
       p2.setAttribute('fill', outerColor);
@@ -982,31 +1325,24 @@ function buildWheel() {
       p2.setAttribute('stroke-width', '1');
       childG.appendChild(p2);
 
-      // Label in inner ring
       const [lx, ly] = labelPos(cs, ce, 170);
       const lbl = document.createElementNS(SVG_NS, 'text');
       lbl.setAttribute('x', lx); lbl.setAttribute('y', ly);
       lbl.setAttribute('transform', `rotate(${rotateText(cs, ce)}, ${lx}, ${ly})`);
       lbl.setAttribute('class', 'wheel-label');
-      lbl.style.fontSize = '8.5px';
+      const labelLen = child.label.length;
+      const childFontSize = labelLen <= 8 ? 8.5 : labelLen <= 10 ? 7.8 : labelLen <= 12 ? 7.2 : 6.6;
+      lbl.style.fontSize = childFontSize + 'px';
       lbl.textContent = child.label;
       childG.appendChild(lbl);
 
-      // Label in outer ring (abbreviated)
+      const shortHints = { serenity:'calm', ecstasy:'bliss', cheerfulness:'upbeat', zest:'vitality', acceptance:'ok as is', admiration:'respect', confidence:'assured', openness:'receptive', apprehension:'low worry', terror:'panic', anxiety:'unease', dread:'ominous', distraction:'startled', amazement:'wonder', confusion:'unclear', awe:'reverence', pensiveness:'wistful', grief:'deep loss', loneliness:'isolated', disappointment:'letdown', boredom:'detached', loathing:'aversion', contempt:'disdain', revulsion:'recoil', annoyance:'irritated', rage:'fury', frustration:'blocked', indignation:'righteous', interest:'curious', vigilance:'watchful', excitement:'energized', hope:'hopeful' };
+
       const [ox, oy] = labelPos(cs, ce, 223);
       const oblbl = document.createElementNS(SVG_NS, 'text');
       oblbl.setAttribute('x', ox); oblbl.setAttribute('y', oy);
       oblbl.setAttribute('transform', `rotate(${rotateText(cs, ce)}, ${ox}, ${oy})`);
       oblbl.setAttribute('class', 'wheel-label outer');
-      // Show abbreviated description hint
-      const shortHints = { serenity: 'calm peace', ecstasy: 'bliss', cheerfulness: 'upbeat', zest: 'vitality',
-        acceptance: 'ok as is', admiration: 'deep respect', confidence: 'self-trust', openness: 'receptive',
-        apprehension: 'low worry', terror: 'extreme fear', anxiety: 'diffuse dread', dread: 'certain bad',
-        distraction: 'mild wonder', amazement: 'awe-delight', confusion: 'doesn\'t fit', awe: 'reverence',
-        pensiveness: 'gentle ache', grief: 'deep loss', loneliness: 'disconnected', disappointment: 'unmet hope',
-        boredom: 'withdrawal', loathing: 'deep aversion', contempt: 'cold disdain', revulsion: 'visceral recoil',
-        annoyance: 'mild anger', rage: 'consuming fury', frustration: 'blocked', indignation: 'righteous',
-        interest: 'curious lean', vigilance: 'alert watch', excitement: 'energized', hope: 'uncertain want' };
       oblbl.textContent = shortHints[child.id] || '';
       childG.appendChild(oblbl);
 
@@ -1023,35 +1359,23 @@ function buildWheel() {
   centerCircle.setAttribute('stroke', '#e8ddd0');
   centerCircle.setAttribute('stroke-width', '1.5');
   centerG.appendChild(centerCircle);
-  const centerText = document.createElementNS(SVG_NS, 'text');
-  centerText.setAttribute('class', 'wheel-label core');
-  centerText.setAttribute('y', '-8');
-  centerText.textContent = 'How are';
-  centerG.appendChild(centerText);
-  const centerText2 = document.createElementNS(SVG_NS, 'text');
-  centerText2.setAttribute('class', 'wheel-label core');
-  centerText2.setAttribute('y', '8');
-  centerText2.textContent = 'you feeling?';
-  centerG.appendChild(centerText2);
+  const ct1 = document.createElementNS(SVG_NS, 'text');
+  ct1.setAttribute('class', 'wheel-label core'); ct1.setAttribute('y', '-8'); ct1.textContent = 'How are';
+  centerG.appendChild(ct1);
+  const ct2 = document.createElementNS(SVG_NS, 'text');
+  ct2.setAttribute('class', 'wheel-label core'); ct2.setAttribute('y', '8'); ct2.textContent = 'you feeling?';
+  centerG.appendChild(ct2);
   svg.appendChild(centerG);
 }
 
-function lightenHex(hex, amount) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  const lr = Math.round(r + (255-r) * amount);
-  const lg = Math.round(g + (255-g) * amount);
-  const lb = Math.round(b + (255-b) * amount);
-  return `rgb(${lr},${lg},${lb})`;
-}
+let currentWheelEmotionId = null;
 
 function selectEmotion(id) {
   selectedId = id;
+  currentWheelEmotionId = id;
   const em = ALL_EMOTIONS[id];
   if (!em) return;
 
-  // Highlight wheel
   document.querySelectorAll('.wheel-sector').forEach(g => {
     const gId = g.dataset.id;
     const gEm = ALL_EMOTIONS[gId];
@@ -1062,24 +1386,24 @@ function selectEmotion(id) {
     }
   });
 
-  // Fill panel
-  const panel = document.getElementById('emotion-info');
-  panel.style.setProperty('--panel-color', em.color);
-  panel.style.setProperty('--panel-color-light', em.light);
-
   document.getElementById('info-placeholder').style.display = 'none';
   const content = document.getElementById('info-content');
   content.classList.remove('visible');
   void content.offsetWidth;
   content.classList.add('visible');
 
-  document.getElementById('info-name').textContent = em.name || em.label || id;
+  document.getElementById('info-name').textContent = em.name || id;
+
   const parent = document.getElementById('info-parent');
   if (em.isCore) {
     parent.textContent = 'Core Emotion';
+    parent.style.background = em.light;
+    parent.style.color = darken(em.color, 0.2);
   } else {
     const core = CORES.find(c => c.id === em.core);
     parent.textContent = core ? `↳ ${core.label}` : '';
+    parent.style.background = em.light;
+    parent.style.color = darken(em.color, 0.2);
   }
 
   document.getElementById('info-desc').textContent = em.description;
@@ -1087,7 +1411,12 @@ function selectEmotion(id) {
   const exList = document.getElementById('info-examples');
   exList.innerHTML = '';
   (em.examples || []).forEach(ex => {
-    const li = document.createElement('li'); li.textContent = ex; exList.appendChild(li);
+    const li = document.createElement('li');
+    li.textContent = ex;
+    li.style.background = em.light;
+    li.style.borderLeft = `3px solid ${em.color}`;
+    li.style.paddingLeft = '0.8rem';
+    exList.appendChild(li);
   });
 
   const relDiv = document.getElementById('info-related');
@@ -1097,42 +1426,40 @@ function selectEmotion(id) {
       const tag = document.createElement('span');
       tag.className = 'related-tag';
       tag.textContent = ALL_EMOTIONS[r].name || r;
+      tag.style.borderColor = em.color;
+      tag.style.color = darken(em.color, 0.25);
       tag.onclick = () => selectEmotion(r);
       relDiv.appendChild(tag);
     }
   });
+
+  const logBtn = document.getElementById('log-from-wheel');
+  logBtn.style.background = em.color;
+  logBtn.style.color = 'white';
+  logBtn.textContent = `✦ Log "${em.name}" to journal`;
+
+  // Apply global theme AFTER DOM is built so it can target newly created elements
+  setTheme(em.color, em.light);
 }
 
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════
 //  BROWSE VIEW
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════
 function buildBrowse() {
   const container = document.getElementById('browse-container');
   container.innerHTML = '';
-
   CORES.forEach(core => {
     const coreData = EMOTIONS[core.id];
     const section = document.createElement('div');
     section.className = 'core-section';
-
     const title = document.createElement('div');
     title.className = 'core-title';
     title.innerHTML = `<span class="core-dot" style="background:${core.color}"></span>${core.label}`;
     section.appendChild(title);
-
     const grid = document.createElement('div');
     grid.className = 'emotion-grid';
-
-    // Core card
-    const coreCard = makeCard(core.id, core.label, coreData.description, core.color, core.light, 'Core');
-    grid.appendChild(coreCard);
-
-    // Child cards
-    coreData.children.forEach(child => {
-      const childCard = makeCard(child.id, child.label, child.desc, core.color, core.light, core.label);
-      grid.appendChild(childCard);
-    });
-
+    grid.appendChild(makeCard(core.id, core.label, coreData.description, core.color, core.light, 'Core'));
+    coreData.children.forEach(child => grid.appendChild(makeCard(child.id, child.label, child.desc, core.color, core.light, core.label)));
     section.appendChild(grid);
     container.appendChild(section);
   });
@@ -1148,10 +1475,13 @@ function makeCard(id, name, desc, color, light, parentLabel) {
   return card;
 }
 
+let currentModalEmotionId = null;
+
 function openModal(id) {
+  currentModalEmotionId = id;
   const em = ALL_EMOTIONS[id];
   if (!em) return;
-
+  setTheme(em.color, em.light);
   document.getElementById('modal-top').style.background = em.color;
   document.getElementById('modal-box').style.setProperty('--modal-light', em.light);
   document.getElementById('modal-name').textContent = em.name;
@@ -1159,181 +1489,135 @@ function openModal(id) {
   parent.style.background = em.light;
   if (em.isCore) { parent.textContent = 'Core Emotion'; }
   else { const c = CORES.find(x => x.id === em.core); parent.textContent = c ? `↳ ${c.label}` : ''; }
-
   document.getElementById('modal-desc').textContent = em.description;
-
   const exList = document.getElementById('modal-examples');
   exList.innerHTML = '';
-  (em.examples||[]).forEach(ex => { const li=document.createElement('li'); li.textContent=ex; exList.appendChild(li); });
-
+  (em.examples||[]).forEach(ex => { const li = document.createElement('li'); li.textContent = ex; exList.appendChild(li); });
   const relDiv = document.getElementById('modal-related');
   relDiv.innerHTML = '';
   (em.related||[]).forEach(r => {
     if (ALL_EMOTIONS[r]) {
-      const tag = document.createElement('span'); tag.className='related-tag';
+      const tag = document.createElement('span'); tag.className = 'related-tag';
       tag.textContent = ALL_EMOTIONS[r].name||r;
       tag.onclick = () => openModal(r);
       relDiv.appendChild(tag);
     }
   });
-
+  const logBtn = document.getElementById('log-from-modal');
+  logBtn.style.background = em.light;
+  logBtn.textContent = `✦ Log "${em.name}" to journal`;
   document.getElementById('modal').classList.add('open');
 }
 
 function closeModal(e) { if (e.target === document.getElementById('modal')) closeModalDirect(); }
 function closeModalDirect() { document.getElementById('modal').classList.remove('open'); }
 
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════
 //  QUIZ
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════
 const QUIZ_FLOW = [
-  {
-    q: 'How does your body feel right now?',
-    opts: [
-      { text: 'Tight, tense, or on edge', next: 'tense' },
-      { text: 'Heavy or slow — like a weight', next: 'heavy' },
-      { text: 'Light and energized', next: 'light' },
-      { text: 'Numb or hollow inside', next: 'numb' },
-      { text: 'Unsettled — hard to describe', next: 'unsettled' },
-    ]
-  },
-  {
-    id: 'tense',
-    q: 'When you feel that tension — what\'s driving it?',
-    opts: [
-      { text: 'Something feels threatening or unsafe', next: 'fear-branch' },
-      { text: 'Something unfair is happening (or happened)', next: 'anger-branch' },
-      { text: 'I\'m bracing for something in the future', next: 'anticipation-branch' },
-      { text: 'I don\'t know — it\'s just there', next: 'anxiety-branch' },
-    ]
-  },
-  {
-    id: 'heavy',
-    q: 'That heavy feeling — what does it carry?',
-    opts: [
-      { text: 'Loss — someone or something is gone', next: 'grief-result' },
-      { text: 'Longing — missing something I can\'t have', next: 'loneliness-result' },
-      { text: 'I failed or something went wrong', next: 'disappointment-result' },
-      { text: 'I feel drained and empty, no particular reason', next: 'sadness-result' },
-    ]
-  },
-  {
-    id: 'light',
-    q: 'That lightness — where is it pointing?',
-    opts: [
-      { text: 'Something good just happened or is coming', next: 'joy-result' },
-      { text: 'I feel excited and can\'t sit still', next: 'excitement-result' },
-      { text: 'I feel curious and interested in something', next: 'interest-result' },
-      { text: 'I feel warm and connected to someone', next: 'trust-result' },
-    ]
-  },
-  {
-    id: 'numb',
-    q: 'That numbness — can you look a little closer?',
-    opts: [
-      { text: 'I think I\'m trying not to feel something', next: 'grief-result' },
-      { text: 'I feel cut off, like I\'m behind glass', next: 'loneliness-result' },
-      { text: 'I\'m bored and disengaged with everything', next: 'boredom-result' },
-      { text: 'Something shocked me and I haven\'t processed it yet', next: 'confusion-result' },
-    ]
-  },
-  {
-    id: 'unsettled',
-    q: 'Is this unsettled feeling more like…',
-    opts: [
-      { text: 'A hum of worry I can\'t shake', next: 'anxiety-branch' },
-      { text: 'Something feels wrong but I can\'t name it', next: 'disgust-branch' },
-      { text: 'I was just surprised by something', next: 'surprise-result' },
-      { text: 'Mixed feelings — several things at once', next: 'mixed-result' },
-    ]
-  },
-  {
-    id: 'fear-branch',
-    q: 'How intense is that feeling of threat?',
-    opts: [
-      { text: 'A low hum — I\'m just on guard', next: 'apprehension-result' },
-      { text: 'Moderate — a knot in my stomach', next: 'dread-result' },
-      { text: 'Intense — my heart is racing', next: 'terror-result' },
-    ]
-  },
-  {
-    id: 'anger-branch',
-    q: 'What kind of unfairness are you feeling?',
-    opts: [
-      { text: 'Someone disrespected or dismissed me', next: 'indignation-result' },
-      { text: 'I keep hitting a wall — nothing\'s working', next: 'frustration-result' },
-      { text: 'Small things that keep piling up', next: 'annoyance-result' },
-      { text: 'Something deeply wrong — it fills me', next: 'rage-result' },
-    ]
-  },
-  {
-    id: 'anticipation-branch',
-    q: 'What are you bracing for?',
-    opts: [
-      { text: 'Something good — I\'m looking forward to it', next: 'excitement-result' },
-      { text: 'Something uncertain — I want it but I\'m not sure', next: 'hope-result' },
-      { text: 'Something I\'m worried about', next: 'dread-result' },
-      { text: 'I\'m just alert and watchful', next: 'vigilance-result' },
-    ]
-  },
-  {
-    id: 'anxiety-branch',
-    q: 'Can you trace the anxiety to anything?',
-    opts: [
-      { text: 'Not really — it\'s free-floating', next: 'anxiety-result' },
-      { text: 'Yes, something specific I\'m worried about', next: 'apprehension-result' },
-      { text: 'It\'s about something in the future', next: 'dread-result' },
-    ]
-  },
-  {
-    id: 'disgust-branch',
-    q: 'What does the "something feels wrong" feeling point to?',
-    opts: [
-      { text: 'A behavior or action — mine or someone else\'s', next: 'contempt-result' },
-      { text: 'A situation or environment that repels me', next: 'revulsion-result' },
-      { text: 'I\'m disengaged — nothing interests me', next: 'boredom-result' },
-    ]
-  },
+  { q: 'How does your body feel right now?', opts: [
+    { text: 'Tight, tense, or on edge', next: 'tense' },
+    { text: 'Heavy or slow — like a weight', next: 'heavy' },
+    { text: 'Light and energized', next: 'light' },
+    { text: 'Numb or hollow inside', next: 'numb' },
+    { text: 'Unsettled — hard to describe', next: 'unsettled' },
+  ]},
+  { id: 'tense', q: 'That tension — what\'s underneath it?', opts: [
+    { text: 'Something feels threatening or unsafe', next: 'fear-branch' },
+    { text: 'Someone did something wrong or unfair', next: 'anger-branch' },
+    { text: 'I\'m waiting for something to happen', next: 'anticipation-branch' },
+    { text: 'I\'m nervous about what I might feel', next: 'anxiety-branch' },
+  ]},
+  { id: 'heavy', q: 'That heaviness — where does it feel like it comes from?', opts: [
+    { text: 'Something I\'ve lost or that\'s gone', next: 'grief-result' },
+    { text: 'I feel let down or disappointed', next: 'disappointment-result' },
+    { text: 'I feel cut off from others', next: 'loneliness-result' },
+    { text: 'I just feel down with no clear reason', next: 'sadness-result' },
+  ]},
+  { id: 'light', q: 'What kind of lightness is this?', opts: [
+    { text: 'Genuine happiness — something is good', next: 'joy-result' },
+    { text: 'Calm, at peace', next: 'sadness-result' },
+    { text: 'Buzzing excitement about something coming', next: 'excitement-result' },
+    { text: 'Curious and interested in something', next: 'interest-result' },
+    { text: 'I feel safe and connected to someone', next: 'trust-result' },
+  ]},
+  { id: 'numb', q: 'That numbness — can you look a little closer?', opts: [
+    { text: 'I think I\'m trying not to feel something', next: 'grief-result' },
+    { text: 'I feel cut off, like I\'m behind glass', next: 'loneliness-result' },
+    { text: 'I\'m bored and disengaged with everything', next: 'boredom-result' },
+    { text: 'Something shocked me and I haven\'t processed it yet', next: 'confusion-result' },
+  ]},
+  { id: 'unsettled', q: 'Is this unsettled feeling more like…', opts: [
+    { text: 'A hum of worry I can\'t shake', next: 'anxiety-branch' },
+    { text: 'Something feels wrong but I can\'t name it', next: 'disgust-branch' },
+    { text: 'I was just surprised by something', next: 'surprise-result' },
+    { text: 'Mixed feelings — several things at once', next: 'mixed-result' },
+  ]},
+  { id: 'fear-branch', q: 'How intense is that feeling of threat?', opts: [
+    { text: 'A low hum — I\'m just on guard', next: 'apprehension-result' },
+    { text: 'Moderate — a knot in my stomach', next: 'dread-result' },
+    { text: 'Intense — my heart is racing', next: 'terror-result' },
+  ]},
+  { id: 'anger-branch', q: 'What kind of unfairness are you feeling?', opts: [
+    { text: 'Someone disrespected or dismissed me', next: 'indignation-result' },
+    { text: 'I keep hitting a wall — nothing\'s working', next: 'frustration-result' },
+    { text: 'Small things that keep piling up', next: 'annoyance-result' },
+    { text: 'Something deeply wrong — it fills me', next: 'rage-result' },
+  ]},
+  { id: 'anticipation-branch', q: 'What are you bracing for?', opts: [
+    { text: 'Something good — I\'m looking forward to it', next: 'excitement-result' },
+    { text: 'Something uncertain — I want it but I\'m not sure', next: 'hope-result' },
+    { text: 'Something I\'m worried about', next: 'dread-result' },
+    { text: 'I\'m just alert and watchful', next: 'vigilance-result' },
+  ]},
+  { id: 'anxiety-branch', q: 'Can you trace the anxiety to anything?', opts: [
+    { text: 'Not really — it\'s free-floating', next: 'anxiety-result' },
+    { text: 'Yes, something specific I\'m worried about', next: 'apprehension-result' },
+    { text: 'It\'s about something in the future', next: 'dread-result' },
+  ]},
+  { id: 'disgust-branch', q: 'What does the "something feels wrong" feeling point to?', opts: [
+    { text: 'A behavior or action — mine or someone else\'s', next: 'contempt-result' },
+    { text: 'A situation or environment that repels me', next: 'revulsion-result' },
+    { text: 'I\'m disengaged — nothing interests me', next: 'boredom-result' },
+  ]},
 ];
 
-// Terminal result nodes
 const QUIZ_RESULTS = {
-  'joy-result':          { id: 'joy',            subtitle: 'Something is genuinely good', also: ['serenity','zest','cheerfulness'] },
-  'grief-result':        { id: 'grief',           subtitle: 'A deep loss is moving through you', also: ['sadness','loneliness','pensiveness'] },
-  'loneliness-result':   { id: 'loneliness',      subtitle: 'The ache of disconnection', also: ['sadness','pensiveness','grief'] },
-  'disappointment-result':{ id: 'disappointment', subtitle: 'Reality didn\'t meet expectation', also: ['sadness','frustration','grief'] },
-  'sadness-result':      { id: 'sadness',         subtitle: 'A quiet heaviness within', also: ['pensiveness','grief','loneliness'] },
-  'excitement-result':   { id: 'excitement',      subtitle: 'Energy and eagerness mixed together', also: ['joy','zest','hope'] },
-  'interest-result':     { id: 'interest',        subtitle: 'Something has your attention', also: ['curiosity','excitement','openness'] },
-  'trust-result':        { id: 'trust',           subtitle: 'A sense of safety and warmth', also: ['acceptance','confidence','openness'] },
-  'boredom-result':      { id: 'boredom',         subtitle: 'Disengagement and mild aversion', also: ['disgust','loneliness','sadness'] },
-  'confusion-result':    { id: 'confusion',       subtitle: 'Things aren\'t fitting together yet', also: ['surprise','distraction','anxiety'] },
-  'surprise-result':     { id: 'amazement',       subtitle: 'The unexpected has arrived', also: ['confusion','awe','distraction'] },
-  'mixed-result':        { id: 'anticipation',    subtitle: 'Several things at once — that\'s okay', also: ['hope','anxiety','excitement'] },
-  'apprehension-result': { id: 'apprehension',    subtitle: 'A quiet, low-level worry', also: ['anxiety','dread','vigilance'] },
-  'dread-result':        { id: 'dread',           subtitle: 'Bracing for something certain', also: ['apprehension','anxiety','fear'] },
-  'terror-result':       { id: 'terror',          subtitle: 'Intense alarm — the body is responding', also: ['fear','dread','anxiety'] },
-  'indignation-result':  { id: 'indignation',     subtitle: 'Righteous anger at an injustice', also: ['anger','frustration','contempt'] },
-  'frustration-result':  { id: 'frustration',     subtitle: 'Blocked from what you need', also: ['annoyance','anger','disappointment'] },
-  'annoyance-result':    { id: 'annoyance',       subtitle: 'Small friction, accumulated', also: ['frustration','anger','disgust'] },
-  'rage-result':         { id: 'rage',            subtitle: 'Intense, consuming anger', also: ['anger','indignation','loathing'] },
-  'hope-result':         { id: 'hope',            subtitle: 'Wanting with uncertainty', also: ['anticipation','excitement','trust'] },
-  'vigilance-result':    { id: 'vigilance',       subtitle: 'Alert and watching carefully', also: ['anticipation','interest','apprehension'] },
-  'anxiety-result':      { id: 'anxiety',         subtitle: 'Free-floating worry', also: ['apprehension','dread','fear'] },
-  'contempt-result':     { id: 'contempt',        subtitle: 'A cold rejection of what\'s wrong', also: ['disgust','anger','indignation'] },
-  'revulsion-result':    { id: 'revulsion',       subtitle: 'A visceral recoil', also: ['disgust','loathing','contempt'] },
+  'joy-result':           { id: 'joy',            subtitle: 'Something is genuinely good',         also: ['serenity','zest','cheerfulness'] },
+  'grief-result':         { id: 'grief',           subtitle: 'A deep loss is moving through you',   also: ['sadness','loneliness','pensiveness'] },
+  'loneliness-result':    { id: 'loneliness',      subtitle: 'The ache of disconnection',           also: ['sadness','pensiveness','grief'] },
+  'disappointment-result':{ id: 'disappointment',  subtitle: 'Reality didn\'t meet expectation',    also: ['sadness','frustration','grief'] },
+  'sadness-result':       { id: 'sadness',         subtitle: 'A quiet heaviness within',            also: ['pensiveness','grief','loneliness'] },
+  'excitement-result':    { id: 'excitement',      subtitle: 'Energy and eagerness mixed together', also: ['joy','zest','hope'] },
+  'interest-result':      { id: 'interest',        subtitle: 'Something has your attention',        also: ['curiosity','excitement','openness'] },
+  'trust-result':         { id: 'trust',           subtitle: 'A sense of safety and warmth',        also: ['acceptance','confidence','openness'] },
+  'boredom-result':       { id: 'boredom',         subtitle: 'Disengagement and mild aversion',     also: ['disgust','loneliness','sadness'] },
+  'confusion-result':     { id: 'confusion',       subtitle: 'Things aren\'t fitting together yet', also: ['surprise','distraction','anxiety'] },
+  'surprise-result':      { id: 'amazement',       subtitle: 'The unexpected has arrived',          also: ['confusion','awe','distraction'] },
+  'mixed-result':         { id: 'anticipation',    subtitle: 'Several things at once — that\'s okay', also: ['hope','anxiety','excitement'] },
+  'apprehension-result':  { id: 'apprehension',    subtitle: 'A quiet, low-level worry',            also: ['anxiety','dread','vigilance'] },
+  'dread-result':         { id: 'dread',           subtitle: 'Bracing for something certain',       also: ['apprehension','anxiety','fear'] },
+  'terror-result':        { id: 'terror',          subtitle: 'Intense alarm — the body is responding', also: ['fear','dread','anxiety'] },
+  'indignation-result':   { id: 'indignation',     subtitle: 'Righteous anger at an injustice',     also: ['anger','frustration','contempt'] },
+  'frustration-result':   { id: 'frustration',     subtitle: 'Blocked from what you need',          also: ['annoyance','anger','disappointment'] },
+  'annoyance-result':     { id: 'annoyance',       subtitle: 'Small friction, accumulated',         also: ['frustration','anger','disgust'] },
+  'rage-result':          { id: 'rage',            subtitle: 'Intense, consuming anger',            also: ['anger','indignation','loathing'] },
+  'hope-result':          { id: 'hope',            subtitle: 'Wanting with uncertainty',            also: ['anticipation','excitement','trust'] },
+  'vigilance-result':     { id: 'vigilance',       subtitle: 'Alert and watching carefully',        also: ['anticipation','interest','apprehension'] },
+  'anxiety-result':       { id: 'anxiety',         subtitle: 'Free-floating worry',                 also: ['apprehension','dread','fear'] },
+  'contempt-result':      { id: 'contempt',        subtitle: 'A cold rejection of what\'s wrong',   also: ['disgust','anger','indignation'] },
+  'revulsion-result':     { id: 'revulsion',       subtitle: 'A visceral recoil',                   also: ['disgust','loathing','contempt'] },
 };
 
-const QUIZ_EMOJIS = { joy:'☀️', serenity:'🌿', ecstasy:'✨', grief:'🌧️', sadness:'💧', loneliness:'🌙',
-  disappointment:'🍂', excitement:'⚡', interest:'🔍', trust:'🤝', boredom:'😶', confusion:'🌀',
-  amazement:'🌟', apprehension:'🫧', dread:'🌫️', terror:'⚡', indignation:'⚖️', frustration:'🧱',
-  annoyance:'🪨', rage:'🌋', hope:'🌱', vigilance:'👁️', anxiety:'🌪️', contempt:'🧊', revulsion:'↩️',
-  anticipation:'⏳', anger:'🔥', fear:'💨', surprise:'💥', disgust:'↩️' };
+const QUIZ_EMOJIS = { joy:'☀️', serenity:'🌿', ecstasy:'✨', grief:'🌧️', sadness:'💧', loneliness:'🌙', disappointment:'🍂', excitement:'⚡', interest:'🔍', trust:'🤝', boredom:'😶', confusion:'🌀', amazement:'🌟', apprehension:'🫧', dread:'🌫️', terror:'⚡', indignation:'⚖️', frustration:'🧱', annoyance:'🪨', rage:'🌋', hope:'🌱', vigilance:'👁️', anxiety:'🌪️', contempt:'🧊', revulsion:'↩️', anticipation:'⏳', anger:'🔥', fear:'💨', surprise:'💥', disgust:'↩️' };
 
 let quizState = { step: null, history: [] };
+let currentQuizEmotionId = null;
 
 function initQuiz() {
   quizState = { step: 'root', history: [] };
+  currentQuizEmotionId = null;
   document.getElementById('quiz-result').classList.remove('visible');
   document.getElementById('quiz-card').style.display = 'block';
   renderQuizStep();
@@ -1341,16 +1625,10 @@ function initQuiz() {
 
 function renderQuizStep() {
   const stepId = quizState.step;
-  let stepData;
-  if (stepId === 'root') {
-    stepData = QUIZ_FLOW[0];
-  } else {
-    stepData = QUIZ_FLOW.find(s => s.id === stepId);
-  }
+  let stepData = stepId === 'root' ? QUIZ_FLOW[0] : QUIZ_FLOW.find(s => s.id === stepId);
   if (!stepData) { showQuizResult(stepId); return; }
 
-  const totalSteps = quizState.history.length + 1;
-  document.getElementById('quiz-step').textContent = `Question ${totalSteps}`;
+  document.getElementById('quiz-step').textContent = `Question ${quizState.history.length + 1}`;
   document.getElementById('quiz-question').textContent = stepData.q;
 
   const optDiv = document.getElementById('quiz-options');
@@ -1359,32 +1637,22 @@ function renderQuizStep() {
     const btn = document.createElement('button');
     btn.className = 'quiz-opt';
     btn.textContent = opt.text;
-    btn.onclick = () => {
-      quizState.history.push(stepId);
-      quizState.step = opt.next;
-      renderQuizStep();
-    };
+    btn.onclick = () => { quizState.history.push(stepId); quizState.step = opt.next; renderQuizStep(); };
     optDiv.appendChild(btn);
   });
 
-  // Back button
   if (quizState.history.length > 0) {
     const back = document.createElement('button');
     back.className = 'quiz-btn ghost';
     back.style.marginTop = '1rem';
     back.textContent = '← Back';
-    back.onclick = () => {
-      quizState.step = quizState.history.pop();
-      renderQuizStep();
-    };
+    back.onclick = () => { quizState.step = quizState.history.pop(); renderQuizStep(); };
     optDiv.appendChild(back);
   }
 
-  // Progress
   const prog = document.getElementById('quiz-progress');
   prog.innerHTML = '';
-  const maxSteps = 3;
-  for (let i = 0; i < maxSteps; i++) {
+  for (let i = 0; i < 3; i++) {
     const dot = document.createElement('div');
     dot.className = 'progress-dot' + (i < quizState.history.length ? ' done' : i === quizState.history.length ? ' current' : '');
     prog.appendChild(dot);
@@ -1396,6 +1664,10 @@ function showQuizResult(resultKey) {
   if (!result) { initQuiz(); return; }
   const em = ALL_EMOTIONS[result.id];
   if (!em) { initQuiz(); return; }
+  currentQuizEmotionId = result.id;
+
+  // Apply global theme
+  setTheme(em.color, em.light);
 
   document.getElementById('quiz-card').style.display = 'none';
   const resDiv = document.getElementById('quiz-result');
@@ -1418,14 +1690,9 @@ function showQuizResult(resultKey) {
     }
   });
 
-  // Progress fill
   const prog = document.getElementById('quiz-progress');
   prog.innerHTML = '';
-  for (let i = 0; i < 3; i++) {
-    const dot = document.createElement('div');
-    dot.className = 'progress-dot done';
-    prog.appendChild(dot);
-  }
+  for (let i = 0; i < 3; i++) { const dot = document.createElement('div'); dot.className = 'progress-dot done'; prog.appendChild(dot); }
 }
 
 function restartQuiz() {
@@ -1434,23 +1701,417 @@ function restartQuiz() {
   initQuiz();
 }
 
-// ═══════════════════════════════════════════
-//  TABS
-// ═══════════════════════════════════════════
-function switchTab(name) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('view-' + name).classList.add('active');
-  const tabs = { wheel: 0, browse: 1, quiz: 2 };
-  document.querySelectorAll('.tab')[tabs[name]].classList.add('active');
+// ══════════════════════════════════════════
+//  JOURNAL
+// ══════════════════════════════════════════
+let journalEntries = JSON.parse(localStorage.getItem('mindscape-journal') || '[]');
+let currentMoodScore = null;
+let selectedEmotionChips = new Set();
+
+// Prompts keyed loosely by emotion categories
+const WRITING_PROMPTS = {
+  default: [
+    'What triggered this feeling?',
+    'Where do you feel it in your body?',
+    'What do you need right now?',
+    'What would you say to a friend feeling this?',
+  ],
+  joy: ['What made today feel good?', 'How can you hold onto this feeling?', 'Who do you want to share this with?'],
+  sadness: ['What are you missing or grieving?', 'What would comfort you right now?', 'Is there something you need to let go of?'],
+  anger: ['What boundary was crossed?', 'What would feel just?', 'What would you like to say, but haven\'t?'],
+  fear: ['What are you bracing for?', 'What\'s the worst case, and could you survive it?', 'What might help you feel safer?'],
+  trust: ['Who or what helped you feel safe today?', 'What does this connection mean to you?'],
+  disgust: ['What value does this feeling protect?', 'Is there something you need to set distance from?'],
+  anticipation: ['What are you hoping for?', 'What can you do now to prepare?', 'What if it goes well?'],
+  surprise: ['How did you respond to the unexpected?', 'What does this reveal about your expectations?'],
+};
+
+function getPromptsForEmotion(id) {
+  if (!id) return WRITING_PROMPTS.default;
+  const em = ALL_EMOTIONS[id];
+  const coreId = em ? (em.isCore ? em.id : em.core) : null;
+  return (coreId && WRITING_PROMPTS[coreId]) ? WRITING_PROMPTS[coreId] : WRITING_PROMPTS.default;
 }
 
-// ═══════════════════════════════════════════
+function openCheckin(prefilledEmotionId) {
+  selectedEmotionChips = new Set();
+  currentMoodScore = null;
+
+  const card = document.getElementById('checkin-card');
+  card.classList.add('open');
+
+  // Apply theme from prefilled emotion if available
+  if (prefilledEmotionId && ALL_EMOTIONS[prefilledEmotionId]) {
+    const em = ALL_EMOTIONS[prefilledEmotionId];
+    setTheme(em.color, em.light);
+  }
+
+  // Date
+  const now = new Date();
+  document.getElementById('checkin-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + ' · ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+  // Pre-filled banner
+  const banner = document.getElementById('prefilled-banner');
+  const bannerText = document.getElementById('prefilled-text');
+  if (prefilledEmotionId && ALL_EMOTIONS[prefilledEmotionId]) {
+    banner.classList.add('visible');
+    bannerText.textContent = `Pre-filled from wheel: "${ALL_EMOTIONS[prefilledEmotionId].name}"`;
+    selectedEmotionChips.add(prefilledEmotionId);
+  } else {
+    banner.classList.remove('visible');
+  }
+
+  // Reset
+  document.getElementById('journal-textarea').value = '';
+  document.getElementById('intensity-slider').value = 5;
+  updateIntensityLabel();
+  document.querySelectorAll('.mood-score-btn').forEach(b => b.classList.remove('selected'));
+
+  // Build emotion chips
+  buildEmotionPicker(prefilledEmotionId);
+
+  // Prompts
+  buildPrompts(prefilledEmotionId);
+
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function buildEmotionPicker(prefilledId) {
+  const picker = document.getElementById('emotion-picker');
+  picker.innerHTML = '';
+
+  // Show all core emotions + their children as chips
+  CORES.forEach(core => {
+    // Core chip
+    const chip = makeEmotionChip(core.id, core.label, core.color, core.light);
+    picker.appendChild(chip);
+    // Child chips
+    EMOTIONS[core.id].children.forEach(child => {
+      const cchip = makeEmotionChip(child.id, child.label, core.color, core.light);
+      picker.appendChild(cchip);
+    });
+  });
+
+  if (prefilledId) {
+    const chip = picker.querySelector(`[data-id="${prefilledId}"]`);
+    if (chip) chip.classList.add('selected');
+  }
+}
+
+function makeEmotionChip(id, label, color, light) {
+  const chip = document.createElement('button');
+  chip.className = 'emotion-chip';
+  chip.textContent = label;
+  chip.dataset.id = id;
+  chip.style.setProperty('--chip-color', color);
+  chip.style.setProperty('--chip-light', light);
+  if (selectedEmotionChips.has(id)) chip.classList.add('selected');
+  chip.onclick = () => {
+    if (selectedEmotionChips.has(id)) { selectedEmotionChips.delete(id); chip.classList.remove('selected'); }
+    else { selectedEmotionChips.add(id); chip.classList.add('selected'); }
+    // Update theme and prompts based on first selected
+    const first = [...selectedEmotionChips][0];
+    if (first && ALL_EMOTIONS[first]) {
+      const fe = ALL_EMOTIONS[first];
+      setTheme(fe.color, fe.light);
+    }
+    buildPrompts(first || null);
+  };
+  return chip;
+}
+
+function buildPrompts(emotionId) {
+  const prompts = getPromptsForEmotion(emotionId);
+  const container = document.getElementById('prompt-chips');
+  container.innerHTML = '';
+  prompts.forEach(p => {
+    const chip = document.createElement('button');
+    chip.className = 'prompt-chip';
+    chip.textContent = p;
+    chip.onclick = () => {
+      const ta = document.getElementById('journal-textarea');
+      ta.value += (ta.value ? '\n\n' : '') + p + ' ';
+      ta.focus();
+    };
+    container.appendChild(chip);
+  });
+}
+
+function updateIntensityLabel() {
+  const val = document.getElementById('intensity-slider').value;
+  const labels = { 1:'Very low', 2:'Low', 3:'Mild', 4:'Moderate', 5:'Noticeable', 6:'Strong', 7:'Intense', 8:'Very intense', 9:'Overwhelming', 10:'Extreme' };
+  document.getElementById('intensity-label').textContent = `${val} — ${labels[val]}`;
+}
+
+function setMoodScore(score, btn) {
+  currentMoodScore = score;
+  document.querySelectorAll('.mood-score-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function closeCheckin() {
+  document.getElementById('checkin-card').classList.remove('open');
+}
+
+function saveEntry() {
+  if (selectedEmotionChips.size === 0) { showToast('Select at least one emotion'); return; }
+
+  const emotions = [...selectedEmotionChips].map(id => {
+    const em = ALL_EMOTIONS[id];
+    return { id, name: em ? em.name : id, color: em ? em.color : '#ccc', light: em ? em.light : '#eee', core: em ? (em.isCore ? id : em.core) : id };
+  });
+
+  const entry = {
+    id: Date.now(),
+    timestamp: new Date().toISOString(),
+    emotions,
+    intensity: parseInt(document.getElementById('intensity-slider').value),
+    moodScore: currentMoodScore,
+    text: document.getElementById('journal-textarea').value.trim(),
+  };
+
+  journalEntries.unshift(entry);
+  localStorage.setItem('mindscape-journal', JSON.stringify(journalEntries));
+  closeCheckin();
+  showToast('Entry saved ✦ — pick your next emotion');
+
+  // Return to wheel for the next cycle
+  setTimeout(() => {
+    showPage('wheel');
+    switchInnerTab('wheel');
+    currentWheelEmotionId = null;
+    selectedId = null;
+    document.querySelectorAll('.wheel-sector').forEach(g => g.classList.remove('dimmed', 'selected'));
+    document.getElementById('info-placeholder').style.display = 'flex';
+    document.getElementById('info-content').classList.remove('visible');
+    // Reset topnav and panel to neutral
+    const topnav = document.getElementById('topnav');
+    if (topnav) { topnav.style.borderBottomColor = '#e8ddd0'; topnav.style.backgroundColor = '#fdf9f4'; }
+    const panel = document.getElementById('emotion-info');
+    if (panel) { panel.style.borderColor = '#e8ddd0'; panel.style.backgroundColor = '#fdf9f4'; }
+    const topBar = document.getElementById('panel-top-bar');
+    if (topBar) topBar.style.background = '#e8ddd0';
+    document.body.style.background = '#faf6f0';
+  }, 800);
+}
+
+function deleteEntry(id) {
+  journalEntries = journalEntries.filter(e => e.id !== id);
+  localStorage.setItem('mindscape-journal', JSON.stringify(journalEntries));
+  renderJournal();
+}
+
+function renderJournal() {
+  const list = document.getElementById('entries-list');
+  const count = document.getElementById('entries-count');
+  count.textContent = `${journalEntries.length} ${journalEntries.length === 1 ? 'entry' : 'entries'}`;
+
+  // Stats
+  document.getElementById('stat-entries').textContent = journalEntries.length;
+  const streak = calcStreak();
+  document.getElementById('stat-streak').textContent = streak;
+  const scored = journalEntries.filter(e => e.moodScore);
+  const avg = scored.length ? (scored.reduce((a, e) => a + e.moodScore, 0) / scored.length).toFixed(1) : '—';
+  document.getElementById('stat-avg').textContent = avg === '—' ? '—' : avg + '/5';
+
+  // Trend
+  if (journalEntries.length >= 2) {
+    document.getElementById('trend-section').style.display = 'block';
+    renderTrendChart();
+  } else {
+    document.getElementById('trend-section').style.display = 'none';
+  }
+
+  if (journalEntries.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📓</div><p>No entries yet.<br>Use the Emotion Wheel or the button above<br>to log your first check-in.</p></div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  journalEntries.forEach(entry => {
+    const card = renderEntryCard(entry);
+    list.appendChild(card);
+  });
+}
+
+function renderEntryCard(entry) {
+  const card = document.createElement('div');
+  card.className = 'entry-card';
+
+  const primaryColor = entry.emotions[0]?.color || '#e8ddd0';
+  const topBar = document.createElement('div');
+  topBar.className = 'entry-top-bar';
+  topBar.style.background = primaryColor;
+  card.appendChild(topBar);
+
+  const body = document.createElement('div');
+  body.className = 'entry-body';
+  body.style.setProperty('--entry-color', primaryColor);
+
+  const date = new Date(entry.timestamp);
+  const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+  // Meta row
+  const meta = document.createElement('div');
+  meta.className = 'entry-meta';
+
+  const dateEl = document.createElement('div');
+  dateEl.className = 'entry-date';
+  dateEl.textContent = dateStr;
+  meta.appendChild(dateEl);
+
+  const tagsEl = document.createElement('div');
+  tagsEl.className = 'entry-emotions';
+  entry.emotions.forEach(em => {
+    const tag = document.createElement('span');
+    tag.className = 'entry-emotion-tag';
+    tag.style.background = em.light || '#eee';
+    tag.style.color = em.color || '#888';
+    tag.textContent = em.name;
+    tagsEl.appendChild(tag);
+  });
+  meta.appendChild(tagsEl);
+  body.appendChild(meta);
+
+  // Intensity pips
+  const pips = document.createElement('div');
+  pips.className = 'entry-intensity-bar';
+  for (let i = 1; i <= 10; i++) {
+    const pip = document.createElement('div');
+    pip.className = 'intensity-pip' + (i <= entry.intensity ? ' filled' : '');
+    pips.appendChild(pip);
+  }
+  const intensityText = document.createElement('span');
+  intensityText.style.cssText = 'font-size:0.72rem;color:var(--muted);margin-left:6px';
+  intensityText.textContent = `Intensity: ${entry.intensity}/10`;
+  pips.appendChild(intensityText);
+  body.appendChild(pips);
+
+  // Mood score
+  if (entry.moodScore) {
+    const moodRow = document.createElement('div');
+    moodRow.className = 'entry-mood-score';
+    const emojis = ['', '😔', '😕', '😐', '🙂', '😄'];
+    const labels = ['', 'Low', 'Tough', 'Okay', 'Good', 'Great'];
+    moodRow.innerHTML = `<span style="font-size:1rem">${emojis[entry.moodScore]}</span> Overall mood: <strong>${labels[entry.moodScore]}</strong>`;
+    body.appendChild(moodRow);
+  }
+
+  // Text
+  if (entry.text) {
+    const textEl = document.createElement('p');
+    textEl.className = 'entry-text preview';
+    textEl.id = `text-${entry.id}`;
+    textEl.textContent = entry.text;
+
+    const footer = document.createElement('div');
+    footer.className = 'entry-footer';
+
+    let expanded = false;
+    const expandBtn = document.createElement('button');
+    expandBtn.className = 'entry-expand';
+    expandBtn.textContent = entry.text.length > 200 ? 'Read more' : '';
+    if (entry.text.length > 200) {
+      expandBtn.onclick = () => {
+        expanded = !expanded;
+        textEl.classList.toggle('preview', !expanded);
+        expandBtn.textContent = expanded ? 'Read less' : 'Read more';
+      };
+    }
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'entry-delete';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.onclick = () => { if (confirm('Delete this entry?')) deleteEntry(entry.id); };
+
+    footer.appendChild(expandBtn);
+    footer.appendChild(deleteBtn);
+    body.appendChild(textEl);
+    body.appendChild(footer);
+  } else {
+    const footer = document.createElement('div');
+    footer.className = 'entry-footer';
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'entry-delete';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.onclick = () => { if (confirm('Delete this entry?')) deleteEntry(entry.id); };
+    footer.appendChild(document.createElement('span'));
+    footer.appendChild(deleteBtn);
+    body.appendChild(footer);
+  }
+
+  card.appendChild(body);
+  return card;
+}
+
+function calcStreak() {
+  if (journalEntries.length === 0) return 0;
+  const days = new Set(journalEntries.map(e => new Date(e.timestamp).toDateString()));
+  const today = new Date().toDateString();
+  if (!days.has(today) && !days.has(new Date(Date.now() - 86400000).toDateString())) return 0;
+  let streak = 0;
+  let d = new Date();
+  while (days.has(d.toDateString())) { streak++; d = new Date(d - 86400000); }
+  return streak;
+}
+
+function renderTrendChart() {
+  const chart = document.getElementById('trend-chart');
+  chart.innerHTML = '';
+  const last14 = journalEntries.slice(0, 14).reverse();
+  last14.forEach(entry => {
+    const bar = document.createElement('div');
+    bar.className = 'trend-bar';
+    const height = entry.moodScore ? (entry.moodScore / 5) * 100 : 30;
+    bar.style.setProperty('--bar-color', entry.emotions[0]?.color || 'var(--border)');
+    bar.style.height = height + '%';
+    const dateStr = new Date(entry.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const moodLabels = ['', 'Low', 'Tough', 'Okay', 'Good', 'Great'];
+    const emotionNames = entry.emotions.map(e => e.name).join(', ');
+    bar.dataset.label = `${dateStr}: ${emotionNames}${entry.moodScore ? ' · ' + moodLabels[entry.moodScore] : ''}`;
+    chart.appendChild(bar);
+  });
+}
+
+// ══════════════════════════════════════════
+//  CROSS-TOOL LINKING
+// ══════════════════════════════════════════
+function logFromWheel() {
+  if (!currentWheelEmotionId) return;
+  showPage('journal');
+  setTimeout(() => openCheckin(currentWheelEmotionId), 100);
+}
+
+function logFromModal() {
+  if (!currentModalEmotionId) return;
+  closeModalDirect();
+  showPage('journal');
+  setTimeout(() => openCheckin(currentModalEmotionId), 100);
+}
+
+function logFromQuiz() {
+  if (!currentQuizEmotionId) return;
+  showPage('journal');
+  setTimeout(() => openCheckin(currentQuizEmotionId), 100);
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ══════════════════════════════════════════
 //  INIT
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════
 buildWheel();
 buildBrowse();
 initQuiz();
+renderJournal();
 </script>
 </body>
 </html>
