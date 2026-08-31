@@ -1,3 +1,4 @@
+<img width="4440" height="2360" alt="mindscape_emotion_wheel_poster" src="https://github.com/user-attachments/assets/0e55b35b-aed0-48b6-a8c7-094e2b7e5c35" />
 # 🌀 Emotion Wheel
 ### Adult Emotional Intelligence Tool — Mindscape Suite
 
